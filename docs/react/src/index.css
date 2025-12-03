@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+@theme {
+    /* Tailwind v4用の変数をマッピング */
+    --color-border: hsl(var(--border));
+    --color-input: hsl(var(--input));
+    --color-ring: hsl(var(--ring));
+    --color-background: hsl(var(--background));
+    --color-foreground: hsl(var(--foreground));
+
+    --color-primary: hsl(var(--primary));
+    --color-primary-foreground: hsl(var(--primary-foreground));
+
+    --color-secondary: hsl(var(--secondary));
+    --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+    --color-destructive: hsl(var(--destructive));
+    --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+    --color-muted: hsl(var(--muted));
+    --color-muted-foreground: hsl(var(--muted-foreground));
+
+    --color-accent: hsl(var(--accent));
+    --color-accent-foreground: hsl(var(--accent-foreground));
+
+    --color-popover: hsl(var(--popover));
+    --color-popover-foreground: hsl(var(--popover-foreground));
+
+    --color-card: hsl(var(--card));
+    --color-card-foreground: hsl(var(--card-foreground));
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+}
+
+/* 
+  ▼ ここが重要です：色の数値を変更しています ▼
+  古い設定（青系）が残っていると色が変わりません。
+*/
+:root {
+    /* 背景：温かみのあるオフホワイト */
+    --background: 40 20% 99%;
+    /* 文字：濃いチャコールグレー */
+    --foreground: 24 10% 10%;
+
+    /* カード背景 */
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 10%;
+
+    /* メインカラー：農園のような緑色 (Green) */
+    --primary: 142 70% 35%;
+    --primary-foreground: 355.7 100% 99%;
+
+    /* サブカラー：土っぽいベージュ (Sand/Beige) */
+    --secondary: 35 30% 96%;
+    --secondary-foreground: 24 10% 10%;
+
+    /* 控えめな表示色 */
+    --muted: 35 20% 94%;
+    --muted-foreground: 25 5.3% 45%;
+
+    /* アクセント */
+    --accent: 35 30% 92%;
+    --accent-foreground: 24 10% 10%;
+
+    /* エラー色 */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* ボーダーライン */
+    --border: 35 15% 88%;
+    --input: 35 15% 88%;
+
+    /* フォーカスリング：緑色 */
+    --ring: 142 70% 35%;
+
+    --radius: 0.5rem;
+}
+
+.dark {
+    --background: 20 14.3% 4.1%;
+    --foreground: 60 9.1% 97.8%;
+    --card: 24 10% 10%;
+    --card-foreground: 60 9.1% 97.8%;
+    --popover: 24 10% 10%;
+    --popover-foreground: 60 9.1% 97.8%;
+    --primary: 142 70% 45%;
+    /* ダークモードでも緑 */
+    --primary-foreground: 144.9 80.4% 10%;
+    --secondary: 12 6.5% 15.1%;
+    --secondary-foreground: 60 9.1% 97.8%;
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+    --accent: 12 6.5% 15.1%;
+    --accent-foreground: 60 9.1% 97.8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 142 70% 45%;
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
