@@ -194,4 +194,24 @@
     .to-farmeet-orange-light {
         --tw-gradient-to: #ffb74d;
     }
+
+    /* ナビゲーションリンクの下線アニメーション */
+    .nav-link-underline {
+        position: relative;
+    }
+
+    .nav-link-underline::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: #66bb6a;
+        transition: width 0.3s ease;
+    }
+
+    .nav-link-underline:hover::after {
+        width: 100%;
+    }
 }

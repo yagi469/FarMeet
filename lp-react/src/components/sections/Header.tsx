@@ -34,7 +34,7 @@ export function Header() {
                         onClick();
                     }}
                     className={cn(
-                        "text-sm font-medium transition-colors hover:text-farmeet-green",
+                        "nav-link-underline text-sm font-medium transition-colors hover:text-farmeet-green",
                         mobile ? "text-lg py-2" : "text-farmeet-text-dark"
                     )}
                 >
