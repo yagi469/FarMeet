@@ -35,8 +35,8 @@
 }
 
 /* 
-  ▼ ここが重要です：色の数値を変更しています ▼
-  古い設定（青系）が残っていると色が変わりません。
+  /docs/index.html と同じ緑色のカラースキームに統一
+  主な色: #66bb6a (primary-green), #4caf50 (primary-green-dark), #81c784 (primary-green-light)
 */
 :root {
     /* 背景：温かみのあるオフホワイト */
@@ -50,9 +50,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 24 10% 10%;
 
-    /* メインカラー：農園のような緑色 (Green) */
-    --primary: 142 70% 35%;
-    --primary-foreground: 355.7 100% 99%;
+    /* メインカラー: 農園のような緑色 #66bb6a */
+    --primary: 122 39% 57%;
+    --primary-foreground: 0 0% 100%;
 
     /* サブカラー：土っぽいベージュ (Sand/Beige) */
     --secondary: 35 30% 96%;
@@ -75,7 +75,7 @@
     --input: 35 15% 88%;
 
     /* フォーカスリング：緑色 */
-    --ring: 142 70% 35%;
+    --ring: 122 39% 57%;
 
     --radius: 0.5rem;
 }
@@ -87,9 +87,9 @@
     --card-foreground: 60 9.1% 97.8%;
     --popover: 24 10% 10%;
     --popover-foreground: 60 9.1% 97.8%;
-    --primary: 142 70% 45%;
-    /* ダークモードでも緑 */
-    --primary-foreground: 144.9 80.4% 10%;
+    /* ダークモードでは少し明るめの緑 #81c784 */
+    --primary: 122 39% 64%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 12 6.5% 15.1%;
     --secondary-foreground: 60 9.1% 97.8%;
     --muted: 12 6.5% 15.1%;
@@ -100,7 +100,7 @@
     --destructive-foreground: 60 9.1% 97.8%;
     --border: 12 6.5% 15.1%;
     --input: 12 6.5% 15.1%;
-    --ring: 142 70% 45%;
+    --ring: 122 39% 64%;
 }
 
 @layer base {
@@ -110,5 +110,88 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+/* カスタムカラークラス - /docs/index.htmlと同じ緑色 */
+@layer utilities {
+
+    /* 緑色のバリエーション */
+    .bg-farmeet-green {
+        background-color: #66bb6a;
+    }
+
+    .bg-farmeet-green-dark {
+        background-color: #4caf50;
+    }
+
+    .bg-farmeet-green-light {
+        background-color: #81c784;
+    }
+
+    .text-farmeet-green {
+        color: #66bb6a;
+    }
+
+    .text-farmeet-green-dark {
+        color: #4caf50;
+    }
+
+    .text-farmeet-green-light {
+        color: #81c784;
+    }
+
+    .border-farmeet-green {
+        border-color: #66bb6a;
+    }
+
+    .border-farmeet-green-light {
+        border-color: #81c784;
+    }
+
+    .hover\:bg-farmeet-green-dark:hover {
+        background-color: #4caf50;
+    }
+
+    .hover\:bg-farmeet-green:hover {
+        background-color: #66bb6a;
+    }
+
+    .hover\:text-farmeet-green:hover {
+        color: #66bb6a;
+    }
+
+    .hover\:border-farmeet-green-light:hover {
+        border-color: #81c784;
+    }
+
+    /* オレンジ色 */
+    .bg-farmeet-orange-light {
+        background-color: #ffb74d;
+    }
+
+    /* ベージュ/クリーム色 */
+    .bg-farmeet-cream {
+        background-color: #f5f3ef;
+    }
+
+    /* グラデーション */
+    .from-farmeet-green {
+        --tw-gradient-from: #66bb6a;
+        --tw-gradient-to: rgb(102 187 106 / 0);
+        --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+    }
+
+    .via-farmeet-green-light {
+        --tw-gradient-to: rgb(129 199 132 / 0);
+        --tw-gradient-stops: var(--tw-gradient-from), #81c784, var(--tw-gradient-to);
+    }
+
+    .to-farmeet-green-light {
+        --tw-gradient-to: #81c784;
+    }
+
+    .to-farmeet-orange-light {
+        --tw-gradient-to: #ffb74d;
     }
 }

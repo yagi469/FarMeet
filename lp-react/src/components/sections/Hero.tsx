@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 export function Hero() {
     return (
         <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-[72px]">
-            {/* Background */}
+            {/* Background - 緑色のグラデーション */}
             <div className="absolute inset-0 z-0 bg-gradient-to-br from-farmeet-green via-farmeet-green-light to-farmeet-orange-light">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.1)_0%,transparent_50%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.05)_0%,transparent_50%)]" />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/20" />
