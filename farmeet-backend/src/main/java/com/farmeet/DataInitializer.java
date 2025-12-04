@@ -100,7 +100,7 @@ public class DataInitializer implements CommandLineRunner {
         farm6.setDescription("富士山の麓で育つ高品質な茶葉。お茶摘み体験と製茶工程の見学ができます。景色も最高で、インスタ映えスポットとしても人気です。");
         farm6.setLocation("静岡県富士市");
         farm6.setOwner(farmer);
-        farm6.setImageUrl("https://images.unsplash.com/photo-1563788835337-9a0d8c44b395?w=800&q=80");
+        farm6.setImageUrl("https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80");
         farms.add(farmRepository.save(farm6));
 
         // 7. 京都 - 野菜・米
@@ -118,7 +118,7 @@ public class DataInitializer implements CommandLineRunner {
         farm8.setDescription("岡山県が誇る白桃とマスカットの農園。高級フルーツを自分で収穫できる贅沢な体験をお楽しみください。");
         farm8.setLocation("岡山県岡山市");
         farm8.setOwner(farmer);
-        farm8.setImageUrl("https://images.unsplash.com/photo-1629828815043-fe5c0bc14247?w=800&q=80");
+        farm8.setImageUrl("https://images.unsplash.com/photo-1595855709940-577268785a7d?w=800&q=80");
         farms.add(farmRepository.save(farm8));
 
         // 9. 福岡 - いちご・柿

@@ -10,16 +10,18 @@ interface FarmCardProps {
 
 export default function FarmCard({ farm }: FarmCardProps) {
     const [isFavorite, setIsFavorite] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     return (
         <Link href={`/farms/${farm.id}`}>
             <div className="group cursor-pointer">
                 <div className="relative overflow-hidden rounded-xl mb-3">
-                    {farm.imageUrl ? (
+                    {!imageError && farm.imageUrl ? (
                         <img
                             src={farm.imageUrl}
                             alt={farm.name}
                             className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={() => setImageError(true)}
                         />
                     ) : (
                         <div className="w-full aspect-square bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
@@ -35,8 +37,8 @@ export default function FarmCard({ farm }: FarmCardProps) {
                     >
                         <svg
                             className={`w-6 h-6 ${isFavorite
-                                    ? 'fill-red-500 stroke-red-500'
-                                    : 'fill-none stroke-white'
+                                ? 'fill-red-500 stroke-red-500'
+                                : 'fill-none stroke-white'
                                 } drop-shadow-md`}
                             strokeWidth="2"
                             viewBox="0 0 24 24"
