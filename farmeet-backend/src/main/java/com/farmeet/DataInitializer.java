@@ -26,25 +26,34 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (userRepository.count() > 0)
-            return; // データがあれば何もしない
+        // Users - 存在確認をしてから作成または取得
+        User farmer = userRepository.findByUsername("tanaka_farm").orElse(null);
+        if (farmer == null) {
+            farmer = new User();
+            farmer.setUsername("tanaka_farm");
+            farmer.setEmail("tanaka@example.com");
+            farmer.setPassword(passwordEncoder.encode("password"));
+            farmer.setRole(User.Role.FARMER);
+            userRepository.save(farmer);
+        }
 
-        // Users
-        User farmer = new User();
-        farmer.setUsername("tanaka_farm");
-        farmer.setEmail("tanaka@example.com");
-        farmer.setPassword(passwordEncoder.encode("password"));
-        farmer.setRole(User.Role.FARMER);
-        userRepository.save(farmer);
+        User user = userRepository.findByUsername("suzuki_user").orElse(null);
+        if (user == null) {
+            user = new User();
+            user.setUsername("suzuki_user");
+            user.setEmail("suzuki@example.com");
+            user.setPassword(passwordEncoder.encode("password"));
+            user.setRole(User.Role.USER);
+            userRepository.save(user);
+        }
 
-        User user = new User();
-        user.setUsername("suzuki_user");
-        user.setEmail("suzuki@example.com");
-        user.setPassword(passwordEncoder.encode("password"));
-        user.setRole(User.Role.USER);
-        userRepository.save(user);
+        System.out.println("Users checked/created.");
 
-        System.out.println("Users created: tanaka_farm (FARMER), suzuki_user (USER)");
+        // Farms - データがない場合のみ追加
+        if (farmRepository.count() > 0) {
+            System.out.println("Farms already exist. Skipping farm data initialization.");
+            return;
+        }
 
         // Farms - 全国10箇所
         List<Farm> farms = new ArrayList<>();
