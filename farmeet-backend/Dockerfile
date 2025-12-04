@@ -2,6 +2,7 @@
 FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /app
 COPY .mvn/ .mvn/
+RUN chmod +x mvnw
 COPY mvnw pom.xml ./
 # 依存関係のダウンロード（オフライン作業用）
 RUN ./mvnw dependency:go-offline
