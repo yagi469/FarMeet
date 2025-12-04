@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authHelper } from '@/lib/auth';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SignupPage() {
     const [username, setUsername] = useState('');
@@ -13,6 +14,7 @@ export default function SignupPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { login } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,6 +23,7 @@ export default function SignupPage() {
 
         try {
             await authHelper.signup(username, email, password, role);
+            login();
             router.push('/');
         } catch (err) {
             setError('登録に失敗しました。入力内容を確認してください。');

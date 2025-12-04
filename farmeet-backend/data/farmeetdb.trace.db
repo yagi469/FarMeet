@@ -25,3 +25,6 @@ The object is already closed [90007-224]
 2025-12-04 09:04:14.734706+09:00 jdbc[4]: exception
 org.h2.jdbc.JdbcSQLNonTransientException: オブジェクトはすでに閉じられています
 The object is already closed [90007-224]
+2025-12-04 13:53:16.180225+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLNonTransientException: オブジェクトはすでに閉じられています
+The object is already closed [90007-224]

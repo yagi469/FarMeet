@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import Header from "@/components/Header";
+import { AuthProvider } from "@/context/AuthContext";
 
 // ... (imports)
 
@@ -31,8 +32,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header />
-        <main>{children}</main>
+        <AuthProvider>
+          <Header />
+          <main>{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

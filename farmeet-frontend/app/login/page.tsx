@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authHelper } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -11,6 +12,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { login } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,6 +21,7 @@ export default function LoginPage() {
 
         try {
             await authHelper.login(email, password);
+            login();
             router.push('/');
         } catch (err) {
             setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
