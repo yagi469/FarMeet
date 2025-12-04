@@ -4,9 +4,9 @@ WORKDIR /app
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 # 依存関係のダウンロード（オフライン作業用）
-RUN ./mvnw.cmd dependency:go-offline
+RUN ./mvnw dependency:go-offline
 COPY src ./src
-RUN ./mvnw.cmd clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:17-jre-jammy
