@@ -10,6 +10,7 @@ export default function ReservationsPage() {
     const router = useRouter();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!authHelper.isAuthenticated()) {
@@ -17,14 +18,17 @@ export default function ReservationsPage() {
             return;
         }
         loadReservations();
-    }, []);
+    }, [router]);
 
     const loadReservations = async () => {
         try {
             const data = await api.getReservations();
             setReservations(data);
-        } catch (error) {
-            console.error('予約読み込みエラー:', error);
+            setError(null);
+        } catch (err) {
+            console.error('予約読み込みエラー:', err);
+            setError('予約の読み込みに失敗しました');
+            setReservations([]);
         } finally {
             setLoading(false);
         }
@@ -74,7 +78,23 @@ export default function ReservationsPage() {
         <div>
             <h1 className="text-3xl font-bold mb-8">予約一覧</h1>
 
-            {reservations.length === 0 ? (
+            {error ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <button
+                        onClick={() => loadReservations()}
+                        className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition mr-2"
+                    >
+                        再読み込み
+                    </button>
+                    <button
+                        onClick={() => router.push('/')}
+                        className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700 transition"
+                    >
+                        ホームに戻る
+                    </button>
+                </div>
+            ) : reservations.length === 0 ? (
                 <div className="bg-gray-50 rounded-lg p-12 text-center">
                     <p className="text-gray-500 mb-4">まだ予約がありません</p>
                     <button

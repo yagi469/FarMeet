@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 
 export default function Header() {
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated, isLoading, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const handleLogout = () => {
@@ -30,7 +30,7 @@ export default function Header() {
                         <Link href="/" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition">
                             農園一覧
                         </Link>
-                        {isAuthenticated && (
+                        {!isLoading && isAuthenticated && (
                             <Link href="/reservations" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition">
                                 予約一覧
                             </Link>
@@ -39,7 +39,9 @@ export default function Header() {
 
                     {/* Right Side */}
                     <div className="flex items-center gap-4">
-                        {isAuthenticated ? (
+                        {isLoading ? (
+                            <div className="w-8 h-8" />
+                        ) : isAuthenticated ? (
                             <div className="relative">
                                 <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}

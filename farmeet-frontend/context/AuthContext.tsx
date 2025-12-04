@@ -6,22 +6,42 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
     isAuthenticated: boolean;
+    isLoading: boolean;
     login: () => void;
     logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
     isAuthenticated: false,
+    isLoading: true,
     login: () => { },
     logout: () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        setIsAuthenticated(authHelper.isAuthenticated());
+        // クライアントサイドでのみトークンを確認
+        const checkAuth = async () => {
+            const token = authHelper.getToken();
+            if (token) {
+                const user = await authHelper.getProfile();
+                if (user) {
+                    setIsAuthenticated(true);
+                } else {
+                    // トークンが無効な場合はログアウト
+                    authHelper.logout();
+                    setIsAuthenticated(false);
+                }
+            } else {
+                setIsAuthenticated(false);
+            }
+            setIsLoading(false);
+        };
+        checkAuth();
     }, []);
 
     const login = () => {
@@ -35,7 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

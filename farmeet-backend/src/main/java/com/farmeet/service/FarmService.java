@@ -1,7 +1,9 @@
 package com.farmeet.service;
 
+import com.farmeet.entity.ExperienceEvent;
 import com.farmeet.entity.Farm;
 import com.farmeet.entity.User;
+import com.farmeet.repository.ExperienceEventRepository;
 import com.farmeet.repository.FarmRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,6 +19,9 @@ public class FarmService {
 
     @Autowired
     private FarmRepository farmRepository;
+
+    @Autowired
+    private ExperienceEventRepository eventRepository;
 
     public List<Farm> getAllFarms() {
         return farmRepository.findAll();
@@ -43,7 +49,12 @@ public class FarmService {
         if (date != null) {
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
-            farms = farmRepository.findByEventDateRange(startOfDay, endOfDay);
+            // イベントから農園IDを取得
+            List<ExperienceEvent> events = eventRepository.findByEventDateBetween(startOfDay, endOfDay);
+            Set<Long> farmIds = events.stream()
+                    .map(e -> e.getFarm().getId())
+                    .collect(Collectors.toSet());
+            farms = farmRepository.findAllById(farmIds);
         } else {
             farms = farmRepository.findAll();
         }

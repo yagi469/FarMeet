@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { authHelper } from '@/lib/auth';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { login } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -22,7 +23,8 @@ export default function LoginPage() {
         try {
             await authHelper.login(email, password);
             login();
-            router.push('/');
+            const redirectUrl = searchParams.get('redirect') || '/';
+            router.push(redirectUrl);
         } catch (err) {
             setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
         } finally {
@@ -89,3 +91,13 @@ export default function LoginPage() {
         </div>
     );
 }
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <LoginForm />
+        </Suspense>
+    );
+}
+
+
