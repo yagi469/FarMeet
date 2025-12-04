@@ -1,20 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { api } from '@/lib/api';
 import { authHelper } from '@/lib/auth';
 import { Reservation } from '@/types';
 
 export default function ReservationsPage() {
     const router = useRouter();
+    const pathname = usePathname();
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!authHelper.isAuthenticated()) {
-            router.push('/login');
+            router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
             return;
         }
         loadReservations();

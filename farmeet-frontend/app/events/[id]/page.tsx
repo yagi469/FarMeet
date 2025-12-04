@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import { api } from '@/lib/api';
 import { authHelper } from '@/lib/auth';
 import { ExperienceEvent } from '@/types';
@@ -9,6 +9,7 @@ import { ExperienceEvent } from '@/types';
 export default function EventDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const pathname = usePathname();
     const [event, setEvent] = useState<ExperienceEvent | null>(null);
     const [numberOfPeople, setNumberOfPeople] = useState(1);
     const [loading, setLoading] = useState(true);
@@ -17,7 +18,7 @@ export default function EventDetailPage() {
 
     useEffect(() => {
         if (!authHelper.isAuthenticated()) {
-            router.push('/login');
+            router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
             return;
         }
         loadEvent();
@@ -114,7 +115,7 @@ export default function EventDetailPage() {
                             id="numberOfPeople"
                             min="1"
                             max={event.availableSlots}
-                            value={numberOfPeople}
+                            value={numberOfPeople || ''}
                             onChange={(e) => setNumberOfPeople(Number(e.target.value))}
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                             required

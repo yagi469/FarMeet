@@ -35,7 +35,7 @@ export default function FarmDetailPage() {
 
     const handleReserve = (eventId: number) => {
         if (!authHelper.isAuthenticated()) {
-            router.push('/login');
+            router.push(`/login?redirect=${encodeURIComponent(`/events/${eventId}`)}`);
             return;
         }
         router.push(`/events/${eventId}`);

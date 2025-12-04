@@ -1,19 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { authHelper } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { User } from '@/types';
 
 export default function ProfilePage() {
     const router = useRouter();
+    const pathname = usePathname();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!authHelper.isAuthenticated()) {
-            router.push('/login');
+            router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
             return;
         }
         loadProfile();
