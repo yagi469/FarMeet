@@ -41,4 +41,15 @@ public class AuthController {
     public ResponseEntity<User> getProfile(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(user);
     }
+
+    @PutMapping("/profile")
+    public ResponseEntity<User> updateProfile(@AuthenticationPrincipal User user,
+            @RequestBody User updatedUser) {
+        try {
+            User updated = authService.updateProfile(user, updatedUser);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

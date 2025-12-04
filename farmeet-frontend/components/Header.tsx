@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 
 export default function Header() {
-    const { isAuthenticated, isLoading, logout } = useAuth();
+    const { isAuthenticated, isLoading, user, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const handleLogout = () => {
@@ -33,6 +33,11 @@ export default function Header() {
                         {!isLoading && isAuthenticated && (
                             <Link href="/reservations" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition">
                                 予約一覧
+                            </Link>
+                        )}
+                        {!isLoading && isAuthenticated && user?.role === 'FARMER' && (
+                            <Link href="/farmer" className="text-sm font-medium text-green-600 hover:text-green-800 transition">
+                                🚜 農家ページ
                             </Link>
                         )}
                     </div>
@@ -76,6 +81,15 @@ export default function Header() {
                                             >
                                                 予約一覧
                                             </Link>
+                                            {user?.role === 'FARMER' && (
+                                                <Link
+                                                    href="/farmer"
+                                                    className="block px-4 py-3 text-sm text-green-600 hover:bg-green-50"
+                                                    onClick={() => setIsMenuOpen(false)}
+                                                >
+                                                    🚜 農家ページ
+                                                </Link>
+                                            )}
                                             <hr className="my-2" />
                                             <button
                                                 onClick={handleLogout}

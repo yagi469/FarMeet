@@ -75,4 +75,34 @@ public class AuthService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+
+    public User updateProfile(User currentUser, User updatedUser) {
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Update username if provided and different
+        if (updatedUser.getUsername() != null && !updatedUser.getUsername().isEmpty()
+                && !updatedUser.getUsername().equals(user.getUsername())) {
+            if (userRepository.existsByUsername(updatedUser.getUsername())) {
+                throw new RuntimeException("Username already exists");
+            }
+            user.setUsername(updatedUser.getUsername());
+        }
+
+        // Update email if provided and different
+        if (updatedUser.getEmail() != null && !updatedUser.getEmail().isEmpty()
+                && !updatedUser.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(updatedUser.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            user.setEmail(updatedUser.getEmail());
+        }
+
+        // Update role if provided and different
+        if (updatedUser.getRole() != null && !updatedUser.getRole().equals(user.getRole())) {
+            user.setRole(updatedUser.getRole());
+        }
+
+        return userRepository.save(user);
+    }
 }

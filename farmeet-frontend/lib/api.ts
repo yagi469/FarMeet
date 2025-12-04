@@ -62,6 +62,16 @@ class ApiClient {
         return response.json();
     }
 
+    async updateProfile(data: { username?: string; email?: string; role?: string }) {
+        const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update profile');
+        return response.json();
+    }
+
     // 農園
     async getFarms() {
         const response = await fetch(`${API_BASE_URL}/farms`);
@@ -81,7 +91,14 @@ class ApiClient {
             headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error('Failed to create farm');
+        return response.json();
+    }
+
+    async getMyFarms() {
+        const response = await fetch(`${API_BASE_URL}/farms/my-farms`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get my farms');
         return response.json();
     }
 
@@ -123,6 +140,23 @@ class ApiClient {
     async getEventsByFarm(farmId: number) {
         const response = await fetch(`${API_BASE_URL}/events/farm/${farmId}`);
         if (!response.ok) throw new Error('Failed to get events');
+        return response.json();
+    }
+
+    async createEvent(data: {
+        title: string;
+        description: string;
+        eventDate: string;
+        capacity: number;
+        price: number;
+        farm: { id: number };
+    }) {
+        const response = await fetch(`${API_BASE_URL}/events`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to create event');
         return response.json();
     }
 
