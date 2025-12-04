@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Farm, ExperienceEvent } from '@/types';
 
 export default function FarmManagePage() {
     const params = useParams();
+    const router = useRouter();
     const [farm, setFarm] = useState<Farm | null>(null);
     const [events, setEvents] = useState<ExperienceEvent[]>([]);
     const [loading, setLoading] = useState(true);
@@ -32,6 +33,28 @@ export default function FarmManagePage() {
         }
     };
 
+    const handleDeleteFarm = async () => {
+        if (!farm || !confirm('本当にこの農園を削除しますか？\n関連するイベントも全て削除されます。')) return;
+
+        try {
+            await api.deleteFarm(farm.id);
+            router.push('/farmer/farms');
+        } catch (error) {
+            alert('農園の削除に失敗しました');
+        }
+    };
+
+    const handleDeleteEvent = async (eventId: number) => {
+        if (!confirm('本当にこのイベントを削除しますか？')) return;
+
+        try {
+            await api.deleteEvent(eventId);
+            setEvents(events.filter(e => e.id !== eventId));
+        } catch (error) {
+            alert('イベントの削除に失敗しました');
+        }
+    };
+
     if (loading) return <div>読み込み中...</div>;
     if (!farm) return <div>農園が見つかりません</div>;
 
@@ -51,7 +74,23 @@ export default function FarmManagePage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4">農園情報</h2>
+                <div className="flex justify-between items-start mb-4">
+                    <h2 className="text-xl font-semibold">農園情報</h2>
+                    <div className="flex gap-2">
+                        <Link
+                            href={`/farmer/farms/${farm.id}/edit`}
+                            className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
+                        >
+                            編集
+                        </Link>
+                        <button
+                            onClick={handleDeleteFarm}
+                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                        >
+                            削除
+                        </button>
+                    </div>
+                </div>
                 <div className="flex gap-6">
                     {farm.imageUrl && (
                         <img
@@ -96,9 +135,17 @@ export default function FarmManagePage() {
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                {/* Future: Edit/Delete buttons */}
-                                <button className="text-gray-400 cursor-not-allowed" disabled>
+                                <Link
+                                    href={`/farmer/farms/${farm.id}/events/${event.id}/edit`}
+                                    className="text-blue-600 hover:text-blue-800 px-2 py-1 border border-blue-600 rounded hover:bg-blue-50"
+                                >
                                     編集
+                                </Link>
+                                <button
+                                    onClick={() => handleDeleteEvent(event.id)}
+                                    className="text-red-600 hover:text-red-800 px-2 py-1 border border-red-600 rounded hover:bg-red-50"
+                                >
+                                    削除
                                 </button>
                             </div>
                         </div>

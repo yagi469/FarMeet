@@ -17,6 +17,7 @@ export default function FarmerLayout({
     const navItems = [
         { href: '/farmer', label: 'ダッシュボード', icon: '📊' },
         { href: '/farmer/farms', label: '農園管理', icon: '🚜' },
+        { href: '/farmer/reservations', label: '予約管理', icon: '📋' },
     ];
 
     useEffect(() => {

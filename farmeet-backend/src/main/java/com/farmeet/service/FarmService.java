@@ -41,6 +41,33 @@ public class FarmService {
         return farmRepository.findByOwnerId(ownerId);
     }
 
+    public Farm updateFarm(Long id, Farm farmData, User user) {
+        Farm farm = farmRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Farm not found"));
+
+        if (!farm.getOwner().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        farm.setName(farmData.getName());
+        farm.setDescription(farmData.getDescription());
+        farm.setLocation(farmData.getLocation());
+        farm.setImageUrl(farmData.getImageUrl());
+
+        return farmRepository.save(farm);
+    }
+
+    public void deleteFarm(Long id, User user) {
+        Farm farm = farmRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Farm not found"));
+
+        if (!farm.getOwner().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        farmRepository.delete(farm);
+    }
+
     // 検索機能（キーワード、地域、日程で絞り込み）
     public List<Farm> searchFarms(String keyword, String location, LocalDate date) {
         List<Farm> farms;

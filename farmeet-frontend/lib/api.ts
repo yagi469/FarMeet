@@ -124,6 +124,24 @@ class ApiClient {
         return response.json();
     }
 
+    async updateFarm(id: number, data: { name: string; description: string; location: string; imageUrl?: string }) {
+        const response = await fetch(`${API_BASE_URL}/farms/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update farm');
+        return response.json();
+    }
+
+    async deleteFarm(id: number) {
+        const response = await fetch(`${API_BASE_URL}/farms/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to delete farm');
+    }
+
     // イベント
     async getEvents() {
         const response = await fetch(`${API_BASE_URL}/events`);
@@ -160,12 +178,44 @@ class ApiClient {
         return response.json();
     }
 
+    async updateEvent(id: number, data: {
+        title: string;
+        description: string;
+        eventDate: string;
+        capacity: number;
+        price: number;
+    }) {
+        const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update event');
+        return response.json();
+    }
+
+    async deleteEvent(id: number) {
+        const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to delete event');
+    }
+
     // 予約
     async getReservations() {
         const response = await fetch(`${API_BASE_URL}/reservations`, {
             headers: getAuthHeaders(),
         });
         if (!response.ok) throw new Error('Failed to get reservations');
+        return response.json();
+    }
+
+    async getFarmerReservations() {
+        const response = await fetch(`${API_BASE_URL}/reservations/farmer`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get farmer reservations');
         return response.json();
     }
 

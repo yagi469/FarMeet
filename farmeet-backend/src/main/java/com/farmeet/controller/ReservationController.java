@@ -23,6 +23,14 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getUserReservations(user.getId()));
     }
 
+    @GetMapping("/farmer")
+    public ResponseEntity<List<Reservation>> getFarmerReservations(@AuthenticationPrincipal User user) {
+        if (user.getRole() != User.Role.FARMER) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok(reservationService.getFarmerReservations(user.getId()));
+    }
+
     @PostMapping
     public ResponseEntity<Reservation> createReservation(@RequestBody ReservationRequest request,
             @AuthenticationPrincipal User user) {

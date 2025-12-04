@@ -59,4 +59,27 @@ public class FarmController {
         List<String> locations = farmService.getLocations();
         return ResponseEntity.ok(locations);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Farm> updateFarm(@PathVariable Long id,
+            @RequestBody Farm farm,
+            @AuthenticationPrincipal User user) {
+        try {
+            Farm updated = farmService.updateFarm(id, farm, user);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteFarm(@PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        try {
+            farmService.deleteFarm(id, user);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

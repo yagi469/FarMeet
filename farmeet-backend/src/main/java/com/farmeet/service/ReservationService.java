@@ -25,6 +25,10 @@ public class ReservationService {
         return reservationRepository.findByUserId(userId);
     }
 
+    public List<Reservation> getFarmerReservations(Long farmerId) {
+        return reservationRepository.findByFarmOwnerId(farmerId);
+    }
+
     @Transactional
     public Reservation createReservation(User user, Long eventId, Integer numberOfPeople) {
         ExperienceEvent event = eventRepository.findById(eventId)
