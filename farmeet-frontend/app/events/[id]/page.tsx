@@ -14,6 +14,7 @@ export default function EventDetailPage() {
     const [numberOfPeople, setNumberOfPeople] = useState(1);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -36,17 +37,21 @@ export default function EventDetailPage() {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        setSubmitting(true);
+        setShowConfirmation(true);
+    };
 
+    const confirmReservation = async () => {
+        setSubmitting(true);
         try {
             await api.createReservation(event!.id, numberOfPeople);
             alert('予約が完了しました！');
             router.push('/reservations');
         } catch (err) {
             setError('予約に失敗しました。もう一度お試しください。');
+            setShowConfirmation(false);
         } finally {
             setSubmitting(false);
         }
@@ -134,9 +139,52 @@ export default function EventDetailPage() {
                         disabled={submitting || event.availableSlots === 0}
                         className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700 transition disabled:bg-gray-400"
                     >
-                        {submitting ? '予約中...' : '予約を確定する'}
+                        {submitting ? '予約中...' : '確認画面へ進む'}
                     </button>
                 </form>
+
+                {/* Confirmation Modal */}
+                {showConfirmation && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                            <h2 className="text-2xl font-bold mb-4">予約内容の確認</h2>
+                            <div className="space-y-4 mb-6">
+                                <div>
+                                    <p className="text-sm text-gray-500">イベント</p>
+                                    <p className="font-semibold">{event.title}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">日時</p>
+                                    <p className="font-semibold">{new Date(event.eventDate).toLocaleString('ja-JP')}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">人数</p>
+                                    <p className="font-semibold">{numberOfPeople}名</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">合計金額</p>
+                                    <p className="text-xl font-bold text-green-600">¥{totalPrice.toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setShowConfirmation(false)}
+                                    className="flex-1 py-2 border border-gray-300 rounded hover:bg-gray-50 transition"
+                                    disabled={submitting}
+                                >
+                                    キャンセル
+                                </button>
+                                <button
+                                    onClick={confirmReservation}
+                                    className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700 transition disabled:bg-gray-400"
+                                    disabled={submitting}
+                                >
+                                    {submitting ? '予約中...' : '予約を確定する'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
