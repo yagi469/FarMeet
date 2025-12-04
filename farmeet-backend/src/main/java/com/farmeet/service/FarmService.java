@@ -6,7 +6,10 @@ import com.farmeet.repository.FarmRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FarmService {
@@ -30,5 +33,48 @@ public class FarmService {
 
     public List<Farm> getFarmsByOwner(Long ownerId) {
         return farmRepository.findByOwnerId(ownerId);
+    }
+
+    // 検索機能（キーワード、地域、日程で絞り込み）
+    public List<Farm> searchFarms(String keyword, String location, LocalDate date) {
+        List<Farm> farms;
+
+        // まず日程で絞り込み
+        if (date != null) {
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+            farms = farmRepository.findByEventDateRange(startOfDay, endOfDay);
+        } else {
+            farms = farmRepository.findAll();
+        }
+
+        // キーワードで絞り込み
+        if (keyword != null && !keyword.isEmpty()) {
+            String lowerKeyword = keyword.toLowerCase();
+            farms = farms.stream()
+                    .filter(farm -> farm.getName().toLowerCase().contains(lowerKeyword) ||
+                            farm.getLocation().toLowerCase().contains(lowerKeyword) ||
+                            farm.getDescription().toLowerCase().contains(lowerKeyword))
+                    .collect(Collectors.toList());
+        }
+
+        // 地域で絞り込み
+        if (location != null && !location.isEmpty()) {
+            farms = farms.stream()
+                    .filter(farm -> farm.getLocation().contains(location))
+                    .collect(Collectors.toList());
+        }
+
+        return farms;
+    }
+
+    // 地域一覧を取得（重複なし）
+    public List<String> getLocations() {
+        return farmRepository.findAll()
+                .stream()
+                .map(Farm::getLocation)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 }

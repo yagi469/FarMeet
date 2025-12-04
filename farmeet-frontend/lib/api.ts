@@ -85,6 +85,28 @@ class ApiClient {
         return response.json();
     }
 
+    async searchFarms(keyword?: string, location?: string, date?: string) {
+        const params = new URLSearchParams();
+        if (keyword) params.append('keyword', keyword);
+        if (location) params.append('location', location);
+        if (date) params.append('date', date);
+
+        const response = await fetch(
+            `${API_BASE_URL}/farms/search?${params.toString()}`,
+            {
+                headers: { 'Content-Type': 'application/json' },
+            }
+        );
+        if (!response.ok) throw new Error('検索に失敗しました');
+        return response.json();
+    }
+
+    async getLocations(): Promise<string[]> {
+        const response = await fetch(`${API_BASE_URL}/farms/locations`);
+        if (!response.ok) throw new Error('地域一覧の取得に失敗しました');
+        return response.json();
+    }
+
     // イベント
     async getEvents() {
         const response = await fetch(`${API_BASE_URL}/events`);

@@ -4,10 +4,16 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Farm } from '@/types';
 import FarmCard from '@/components/FarmCard';
+import SearchBar from '@/components/SearchBar';
+import LocationFilter from '@/components/LocationFilter';
+import DatePicker from '@/components/DatePicker';
 
 export default function Home() {
   const [farms, setFarms] = useState<Farm[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
 
   useEffect(() => {
     loadFarms();
@@ -24,6 +30,37 @@ export default function Home() {
     }
   };
 
+  const handleSearch = async (keyword: string) => {
+    setSearchKeyword(keyword);
+    await performSearch(keyword, selectedLocation, selectedDate);
+  };
+
+  const handleLocationChange = async (location: string) => {
+    setSelectedLocation(location);
+    await performSearch(searchKeyword, location, selectedDate);
+  };
+
+  const handleDateChange = async (date: string) => {
+    setSelectedDate(date);
+    await performSearch(searchKeyword, selectedLocation, date);
+  };
+
+  const performSearch = async (keyword: string, location: string, date: string) => {
+    setLoading(true);
+    try {
+      const data = await api.searchFarms(
+        keyword || undefined,
+        location || undefined,
+        date || undefined
+      );
+      setFarms(data);
+    } catch (error) {
+      console.error('検索に失敗しました:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -34,24 +71,25 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* 検索エリア - Airbnbスタイル */}
+      {/* 検索バー */}
+      <SearchBar onSearch={handleSearch} />
+
+      {/* Airbnb風検索エリア */}
       <div className="mb-12">
         <div className="flex flex-col md:flex-row gap-4 items-center bg-white rounded-full shadow-lg p-4 border border-gray-200">
           <div className="flex-1 px-4">
             <label className="text-xs font-semibold text-gray-700">場所</label>
-            <input
-              type="text"
-              placeholder="どこに行きますか？"
-              className="w-full border-none focus:outline-none text-sm"
+            <LocationFilter
+              onLocationChange={handleLocationChange}
+              selectedLocation={selectedLocation}
             />
           </div>
           <div className="hidden md:block w-px h-8 bg-gray-300" />
           <div className="flex-1 px-4">
             <label className="text-xs font-semibold text-gray-700">日程</label>
-            <input
-              type="text"
-              placeholder="日程を追加"
-              className="w-full border-none focus:outline-none text-sm"
+            <DatePicker
+              onDateChange={handleDateChange}
+              selectedDate={selectedDate}
             />
           </div>
           <div className="hidden md:block w-px h-8 bg-gray-300" />
@@ -70,6 +108,8 @@ export default function Home() {
           </button>
         </div>
       </div>
+
+
 
       {/* カテゴリータブ - Airbnbスタイル */}
       <div className="flex gap-8 mb-8 overflow-x-auto pb-4 border-b">
