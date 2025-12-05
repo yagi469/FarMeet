@@ -105,7 +105,7 @@ export default function Header() {
                             <div className="flex items-center gap-2">
                                 <Link
                                     href="/login"
-                                    className="hidden sm:block text-sm font-medium text-gray-700 hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-50 transition"
+                                    className="text-sm font-medium text-gray-700 hover:text-gray-900 px-4 py-2 rounded-full hover:bg-gray-50 transition"
                                 >
                                     ログイン
                                 </Link>
