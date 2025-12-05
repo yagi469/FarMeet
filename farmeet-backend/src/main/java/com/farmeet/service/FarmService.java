@@ -68,19 +68,32 @@ public class FarmService {
         farmRepository.delete(farm);
     }
 
-    // 検索機能（キーワード、地域、日程で絞り込み）
-    public List<Farm> searchFarms(String keyword, String location, LocalDate date) {
+    // 検索機能（キーワード、地域、日程、人数で絞り込み）
+    public List<Farm> searchFarms(String keyword, String location, LocalDate date, Integer guests) {
         List<Farm> farms;
+        int totalGuests = guests != null ? guests : 0;
 
-        // まず日程で絞り込み
+        // まず日程と人数で絞り込み
         if (date != null) {
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
-            // イベントから農園IDを取得
-            List<ExperienceEvent> events = eventRepository.findByEventDateBetween(startOfDay, endOfDay);
+
+            List<ExperienceEvent> events;
+            if (totalGuests > 0) {
+                // 日程と人数で絞り込み
+                events = eventRepository.findByEventDateBetweenAndMinSlots(startOfDay, endOfDay, totalGuests);
+            } else {
+                // 日程のみで絞り込み
+                events = eventRepository.findByEventDateBetween(startOfDay, endOfDay);
+            }
+
             Set<Long> farmIds = events.stream()
                     .map(e -> e.getFarm().getId())
                     .collect(Collectors.toSet());
+            farms = farmRepository.findAllById(farmIds);
+        } else if (totalGuests > 0) {
+            // 人数のみで絞り込み（将来のイベントから検索）
+            List<Long> farmIds = eventRepository.findFarmIdsByMinSlots(totalGuests, LocalDateTime.now());
             farms = farmRepository.findAllById(farmIds);
         } else {
             farms = farmRepository.findAll();

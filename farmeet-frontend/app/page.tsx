@@ -7,6 +7,7 @@ import FarmCard from '@/components/FarmCard';
 import SearchBar from '@/components/SearchBar';
 import LocationFilter from '@/components/LocationFilter';
 import DatePicker from '@/components/DatePicker';
+import GuestSelector from '@/components/GuestSelector';
 
 export default function Home() {
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -14,6 +15,8 @@ export default function Home() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+  const [adults, setAdults] = useState(0);
+  const [children, setChildren] = useState(0);
 
   useEffect(() => {
     loadFarms();
@@ -32,26 +35,34 @@ export default function Home() {
 
   const handleSearch = async (keyword: string) => {
     setSearchKeyword(keyword);
-    await performSearch(keyword, selectedLocation, selectedDate);
+    await performSearch(keyword, selectedLocation, selectedDate, adults, children);
   };
 
   const handleLocationChange = async (location: string) => {
     setSelectedLocation(location);
-    await performSearch(searchKeyword, location, selectedDate);
+    await performSearch(searchKeyword, location, selectedDate, adults, children);
   };
 
   const handleDateChange = async (date: string) => {
     setSelectedDate(date);
-    await performSearch(searchKeyword, selectedLocation, date);
+    await performSearch(searchKeyword, selectedLocation, date, adults, children);
   };
 
-  const performSearch = async (keyword: string, location: string, date: string) => {
+  const handleGuestsChange = async (newAdults: number, newChildren: number) => {
+    setAdults(newAdults);
+    setChildren(newChildren);
+    await performSearch(searchKeyword, selectedLocation, selectedDate, newAdults, newChildren);
+  };
+
+  const performSearch = async (keyword: string, location: string, date: string, adultsCount: number, childrenCount: number) => {
     setLoading(true);
     try {
+      const totalGuests = adultsCount + childrenCount;
       const data = await api.searchFarms(
         keyword || undefined,
         location || undefined,
-        date || undefined
+        date || undefined,
+        totalGuests > 0 ? totalGuests : undefined
       );
       setFarms(data);
     } catch (error) {
@@ -95,10 +106,10 @@ export default function Home() {
           <div className="hidden md:block w-px h-8 bg-gray-300" />
           <div className="flex-1 px-4 py-2 md:py-0 mb-4 md:mb-0">
             <label className="text-xs font-bold text-gray-800 block mb-1">人数</label>
-            <input
-              type="text"
-              placeholder="ゲストを追加"
-              className="w-full border-none focus:outline-none text-sm text-gray-600 placeholder-gray-400 bg-transparent p-0"
+            <GuestSelector
+              onGuestsChange={handleGuestsChange}
+              adults={adults}
+              children={children}
             />
           </div>
           <button className="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 md:p-4 w-full md:w-auto flex justify-center items-center transition-colors shadow-md">

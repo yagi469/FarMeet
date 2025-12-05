@@ -49,8 +49,9 @@ public class FarmController {
     public ResponseEntity<List<Farm>> searchFarms(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String location,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<Farm> farms = farmService.searchFarms(keyword, location, date);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Integer guests) {
+        List<Farm> farms = farmService.searchFarms(keyword, location, date, guests);
         return ResponseEntity.ok(farms);
     }
 
