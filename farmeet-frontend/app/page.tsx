@@ -76,32 +76,33 @@ export default function Home() {
 
       {/* Airbnb風検索エリア */}
       <div className="mb-12">
-        <div className="flex flex-col md:flex-row gap-4 items-center bg-white rounded-full shadow-lg p-4 border border-gray-200">
-          <div className="flex-1 px-4">
-            <label className="text-xs font-semibold text-gray-700">場所</label>
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center bg-white rounded-3xl md:rounded-full shadow-lg p-4 md:p-2 md:pl-6 border border-gray-200">
+          <div className="flex-1 px-4 py-2 md:py-0 border-b md:border-b-0 border-gray-100">
+            <label className="text-xs font-bold text-gray-800 block mb-1">場所</label>
             <LocationFilter
               onLocationChange={handleLocationChange}
               selectedLocation={selectedLocation}
             />
           </div>
           <div className="hidden md:block w-px h-8 bg-gray-300" />
-          <div className="flex-1 px-4">
-            <label className="text-xs font-semibold text-gray-700">日程</label>
+          <div className="flex-1 px-4 py-2 md:py-0 border-b md:border-b-0 border-gray-100">
+            <label className="text-xs font-bold text-gray-800 block mb-1">日程</label>
             <DatePicker
               onDateChange={handleDateChange}
               selectedDate={selectedDate}
             />
           </div>
           <div className="hidden md:block w-px h-8 bg-gray-300" />
-          <div className="flex-1 px-4">
-            <label className="text-xs font-semibold text-gray-700">人数</label>
+          <div className="flex-1 px-4 py-2 md:py-0 mb-4 md:mb-0">
+            <label className="text-xs font-bold text-gray-800 block mb-1">人数</label>
             <input
               type="text"
               placeholder="ゲストを追加"
-              className="w-full border-none focus:outline-none text-sm"
+              className="w-full border-none focus:outline-none text-sm text-gray-600 placeholder-gray-400 bg-transparent p-0"
             />
           </div>
-          <button className="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 transition-colors">
+          <button className="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 md:p-4 w-full md:w-auto flex justify-center items-center transition-colors shadow-md">
+            <span className="md:hidden font-bold mr-2">検索</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>

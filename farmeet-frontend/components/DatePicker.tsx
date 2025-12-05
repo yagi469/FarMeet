@@ -11,18 +11,18 @@ export default function DatePicker({ onDateChange, selectedDate }: DatePickerPro
     const [isFocused, setIsFocused] = useState(false);
 
     return (
-        <div className="relative w-full">
+        <div className="relative w-full h-6">
             <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => onDateChange(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                className={`appearance-none w-full bg-transparent border-none focus:outline-none cursor-pointer text-sm ${!selectedDate && !isFocused ? 'text-transparent' : 'text-gray-600'
+                className={`absolute inset-0 w-full h-full bg-transparent border-none focus:outline-none cursor-pointer text-sm z-10 ${!selectedDate ? 'text-transparent' : 'text-gray-600'
                     }`}
             />
-            {!selectedDate && !isFocused && (
-                <div className="absolute inset-0 pointer-events-none flex items-center">
+            {!selectedDate && (
+                <div className="absolute inset-0 pointer-events-none flex items-center z-0">
                     <span className="text-sm text-gray-400">日程を追加</span>
                 </div>
             )}
