@@ -13,7 +13,7 @@ export default function FarmCard({ farm }: FarmCardProps) {
     const [imageError, setImageError] = useState(false);
 
     return (
-        <Link href={`/farms/${farm.id}`}>
+        <Link href={`/farms/${farm.id}`} target="_blank" rel="noopener noreferrer">
             <div className="group cursor-pointer">
                 <div className="relative overflow-hidden rounded-xl mb-3">
                     {!imageError && farm.imageUrl ? (
