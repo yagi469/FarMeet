@@ -15,6 +15,7 @@ export default function CreateEventPage() {
         eventDate: '',
         capacity: 10,
         price: 1000,
+        category: '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -82,7 +83,7 @@ export default function CreateEventPage() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6 mb-8">
+                    <div className="grid grid-cols-2 gap-6 mb-6">
                         <div>
                             <label className="block text-sm font-medium mb-2">定員（名）</label>
                             <input
@@ -105,6 +106,21 @@ export default function CreateEventPage() {
                                 required
                             />
                         </div>
+                    </div>
+
+                    <div className="mb-8">
+                        <label className="block text-sm font-medium mb-2">カテゴリ</label>
+                        <select
+                            value={formData.category}
+                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                            required
+                        >
+                            <option value="">選択してください</option>
+                            <option value="FRUIT">🍇 果物狩り</option>
+                            <option value="VEGETABLE">🥕 野菜収穫</option>
+                            <option value="FLOWER">🌸 花摘み</option>
+                        </select>
                     </div>
 
                     <div className="flex justify-end gap-4">

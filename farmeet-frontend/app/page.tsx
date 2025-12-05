@@ -17,6 +17,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState('');
   const [adults, setAdults] = useState(0);
   const [children, setChildren] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
     loadFarms();
@@ -35,26 +36,31 @@ export default function Home() {
 
   const handleSearch = async (keyword: string) => {
     setSearchKeyword(keyword);
-    await performSearch(keyword, selectedLocation, selectedDate, adults, children);
+    await performSearch(keyword, selectedLocation, selectedDate, adults, children, selectedCategory);
   };
 
   const handleLocationChange = async (location: string) => {
     setSelectedLocation(location);
-    await performSearch(searchKeyword, location, selectedDate, adults, children);
+    await performSearch(searchKeyword, location, selectedDate, adults, children, selectedCategory);
   };
 
   const handleDateChange = async (date: string) => {
     setSelectedDate(date);
-    await performSearch(searchKeyword, selectedLocation, date, adults, children);
+    await performSearch(searchKeyword, selectedLocation, date, adults, children, selectedCategory);
   };
 
   const handleGuestsChange = async (newAdults: number, newChildren: number) => {
     setAdults(newAdults);
     setChildren(newChildren);
-    await performSearch(searchKeyword, selectedLocation, selectedDate, newAdults, newChildren);
+    await performSearch(searchKeyword, selectedLocation, selectedDate, newAdults, newChildren, selectedCategory);
   };
 
-  const performSearch = async (keyword: string, location: string, date: string, adultsCount: number, childrenCount: number) => {
+  const handleCategoryChange = async (category: string) => {
+    setSelectedCategory(category);
+    await performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, category);
+  };
+
+  const performSearch = async (keyword: string, location: string, date: string, adultsCount: number, childrenCount: number, category: string) => {
     setLoading(true);
     try {
       const totalGuests = adultsCount + childrenCount;
@@ -62,7 +68,8 @@ export default function Home() {
         keyword || undefined,
         location || undefined,
         date || undefined,
-        totalGuests > 0 ? totalGuests : undefined
+        totalGuests > 0 ? totalGuests : undefined,
+        category || undefined
       );
       setFarms(data);
     } catch (error) {
@@ -125,21 +132,33 @@ export default function Home() {
 
       {/* カテゴリータブ - Airbnbスタイル */}
       <div className="flex gap-8 mb-8 overflow-x-auto pb-4 border-b">
-        <button className="flex flex-col items-center gap-2 pb-3 border-b-2 border-gray-900 opacity-100 hover:border-gray-500 transition">
+        <button
+          onClick={() => handleCategoryChange('')}
+          className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === '' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+        >
           <span className="text-2xl">🏠</span>
           <span className="text-xs font-medium whitespace-nowrap">すべての農園</span>
         </button>
-        <button className="flex flex-col items-center gap-2 pb-3 border-b-2 border-transparent opacity-60 hover:opacity-100 hover:border-gray-300 transition">
+        <button
+          onClick={() => handleCategoryChange('FRUIT')}
+          className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'FRUIT' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+        >
           <span className="text-2xl">🍇</span>
           <span className="text-xs font-medium whitespace-nowrap">果物狩り</span>
         </button>
-        <button className="flex flex-col items-center gap-2 pb-3 border-b-2 border-transparent opacity-60 hover:opacity-100 hover:border-gray-300 transition">
+        <button
+          onClick={() => handleCategoryChange('VEGETABLE')}
+          className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'VEGETABLE' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+        >
           <span className="text-2xl">🥕</span>
           <span className="text-xs font-medium whitespace-nowrap">野菜収穫</span>
         </button>
-        <button className="flex flex-col items-center gap-2 pb-3 border-b-2 border-transparent opacity-60 hover:opacity-100 hover:border-gray-300 transition">
+        <button
+          onClick={() => handleCategoryChange('FLOWER')}
+          className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'FLOWER' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+        >
           <span className="text-2xl">🌸</span>
-          <span className="text-xs font-medium whitespace-nowrap">花摘み</span>
+          <span className="text-xs font-medium whitespace-nowrap">花摽み</span>
         </button>
       </div>
 

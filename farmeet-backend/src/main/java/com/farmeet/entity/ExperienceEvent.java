@@ -41,6 +41,9 @@ public class ExperienceEvent {
     @Column(name = "available_slots", nullable = false)
     private Integer availableSlots;
 
+    @Column(name = "category")
+    private String category; // FRUIT, VEGETABLE, FLOWER
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

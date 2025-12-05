@@ -68,22 +68,26 @@ public class FarmService {
         farmRepository.delete(farm);
     }
 
-    // 検索機能（キーワード、地域、日程、人数で絞り込み）
-    public List<Farm> searchFarms(String keyword, String location, LocalDate date, Integer guests) {
+    // 検索機能（キーワード、地域、日程、人数、カテゴリで絞り込み）
+    public List<Farm> searchFarms(String keyword, String location, LocalDate date, Integer guests, String category) {
         List<Farm> farms;
         int totalGuests = guests != null ? guests : 0;
+        boolean hasCategory = category != null && !category.isEmpty();
 
-        // まず日程と人数で絞り込み
+        // まず日程、人数、カテゴリで絞り込み
         if (date != null) {
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
 
             List<ExperienceEvent> events;
-            if (totalGuests > 0) {
-                // 日程と人数で絞り込み
+            if (hasCategory && totalGuests > 0) {
+                events = eventRepository.findByEventDateBetweenAndCategoryAndMinSlots(startOfDay, endOfDay, category,
+                        totalGuests);
+            } else if (hasCategory) {
+                events = eventRepository.findByEventDateBetweenAndCategory(startOfDay, endOfDay, category);
+            } else if (totalGuests > 0) {
                 events = eventRepository.findByEventDateBetweenAndMinSlots(startOfDay, endOfDay, totalGuests);
             } else {
-                // 日程のみで絞り込み
                 events = eventRepository.findByEventDateBetween(startOfDay, endOfDay);
             }
 
@@ -91,8 +95,14 @@ public class FarmService {
                     .map(e -> e.getFarm().getId())
                     .collect(Collectors.toSet());
             farms = farmRepository.findAllById(farmIds);
+        } else if (hasCategory && totalGuests > 0) {
+            List<Long> farmIds = eventRepository.findFarmIdsByCategoryAndMinSlots(category, totalGuests,
+                    LocalDateTime.now());
+            farms = farmRepository.findAllById(farmIds);
+        } else if (hasCategory) {
+            List<Long> farmIds = eventRepository.findFarmIdsByCategory(category, LocalDateTime.now());
+            farms = farmRepository.findAllById(farmIds);
         } else if (totalGuests > 0) {
-            // 人数のみで絞り込み（将来のイベントから検索）
             List<Long> farmIds = eventRepository.findFarmIdsByMinSlots(totalGuests, LocalDateTime.now());
             farms = farmRepository.findAllById(farmIds);
         } else {

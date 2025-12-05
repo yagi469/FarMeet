@@ -102,12 +102,13 @@ class ApiClient {
         return response.json();
     }
 
-    async searchFarms(keyword?: string, location?: string, date?: string, guests?: number) {
+    async searchFarms(keyword?: string, location?: string, date?: string, guests?: number, category?: string) {
         const params = new URLSearchParams();
         if (keyword) params.append('keyword', keyword);
         if (location) params.append('location', location);
         if (date) params.append('date', date);
         if (guests && guests > 0) params.append('guests', guests.toString());
+        if (category) params.append('category', category);
 
         const response = await fetch(
             `${API_BASE_URL}/farms/search?${params.toString()}`,
