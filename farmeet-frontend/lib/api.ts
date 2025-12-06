@@ -290,6 +290,36 @@ class ApiClient {
         return response.json();
     }
 
+    async adminCreateUser(data: { username: string; email: string; password: string; role: string }) {
+        const response = await fetch(`${API_BASE_URL}/admin/users`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to create user');
+        return response.json();
+    }
+
+    async adminUpdateUser(id: number, data: { username: string; email: string; role: string }) {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update user');
+        return response.json();
+    }
+
+    async adminUpdateFarm(id: number, data: { name: string; description: string; location: string; imageUrl?: string; ownerId: number }) {
+        const response = await fetch(`${API_BASE_URL}/admin/farms/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update farm');
+        return response.json();
+    }
+
     removeToken() {
         removeToken();
     }

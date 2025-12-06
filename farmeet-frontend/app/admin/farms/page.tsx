@@ -31,11 +31,13 @@ interface User {
     role: string;
 }
 
+
 export default function AdminFarmsPage() {
     const [farms, setFarms] = useState<Farm[]>([]);
     const [farmers, setFarmers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -78,21 +80,46 @@ export default function AdminFarmsPage() {
         }
     };
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.adminCreateFarm({
-                ...formData,
-                ownerId: parseInt(formData.ownerId)
-            });
-            alert('農園を作成しました');
+            if (editingId) {
+                await api.adminUpdateFarm(editingId, {
+                    ...formData,
+                    ownerId: parseInt(formData.ownerId)
+                });
+                alert('農園情報を更新しました');
+            } else {
+                await api.adminCreateFarm({
+                    ...formData,
+                    ownerId: parseInt(formData.ownerId)
+                });
+                alert('農園を作成しました');
+            }
             setIsDialogOpen(false);
-            setFormData({ name: '', description: '', location: '', imageUrl: '', ownerId: '' });
-            fetchData(); // Refresh list
+            resetForm();
+            fetchData();
         } catch (error) {
-            console.error('Failed to create farm:', error);
-            alert('農園の作成に失敗しました');
+            console.error('Failed to save farm:', error);
+            alert('保存に失敗しました');
         }
+    };
+
+    const resetForm = () => {
+        setFormData({ name: '', description: '', location: '', imageUrl: '', ownerId: '' });
+        setEditingId(null);
+    };
+
+    const handleEdit = (farm: Farm) => {
+        setFormData({
+            name: farm.name,
+            description: farm.description,
+            location: farm.location,
+            imageUrl: farm.imageUrl || '',
+            ownerId: farm.owner.id.toString()
+        });
+        setEditingId(farm.id);
+        setIsDialogOpen(true);
     };
 
     if (isLoading) return <div>読み込み中...</div>;
@@ -101,7 +128,10 @@ export default function AdminFarmsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900">農園管理</h1>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    setIsDialogOpen(open);
+                    if (!open) resetForm();
+                }}>
                     <DialogTrigger asChild>
                         <Button className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2">
                             <Plus className="w-4 h-4" />
@@ -110,9 +140,9 @@ export default function AdminFarmsPage() {
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
-                            <DialogTitle>農園を新規作成</DialogTitle>
+                            <DialogTitle>{editingId ? '農園情報を編集' : '農園を新規作成'}</DialogTitle>
                         </DialogHeader>
-                        <form onSubmit={handleCreate} className="space-y-4 mt-4">
+                        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">農園名</label>
                                 <Input
@@ -164,7 +194,9 @@ export default function AdminFarmsPage() {
                                     ))}
                                 </select>
                             </div>
-                            <Button type="submit" className="w-full">作成する</Button>
+                            <Button type="submit" className="w-full">
+                                {editingId ? '更新する' : '作成する'}
+                            </Button>
                         </form>
                     </DialogContent>
                 </Dialog>
@@ -202,6 +234,13 @@ export default function AdminFarmsPage() {
                                     {farm.owner.username} <span className="text-xs text-gray-400">(#{farm.owner.id})</span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
+                                    <button
+                                        onClick={() => handleEdit(farm)}
+                                        className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors mr-2"
+                                        title="編集"
+                                    >
+                                        Edit
+                                    </button>
                                     <button
                                         onClick={() => handleDelete(farm.id)}
                                         className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"

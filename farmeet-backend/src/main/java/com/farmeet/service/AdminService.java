@@ -18,10 +18,13 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final FarmRepository farmRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
-    public AdminService(UserRepository userRepository, FarmRepository farmRepository) {
+    public AdminService(UserRepository userRepository, FarmRepository farmRepository,
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.farmRepository = farmRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> getAllUsers() {
@@ -47,6 +50,40 @@ public class AdminService {
         farmRepository.delete(farm);
     }
 
+    public User createUser(String username, String email, String password, User.Role role) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        if (role != null) {
+            user.setRole(role);
+        } else {
+            user.setRole(User.Role.USER);
+        }
+        return userRepository.save(user);
+    }
+
+    public User updateUser(Long id, String username, String email, User.Role role) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        if (username != null && !username.isEmpty())
+            user.setUsername(username);
+        if (email != null && !email.isEmpty()) {
+            // Check if email is taken by another user
+            userRepository.findByEmail(email).ifPresent(u -> {
+                if (!u.getId().equals(id))
+                    throw new IllegalArgumentException("Email already in use");
+            });
+            user.setEmail(email);
+        }
+        if (role != null)
+            user.setRole(role);
+        return userRepository.save(user);
+    }
+
     public Farm createFarmByAdmin(String name, String description, String location, String imageUrl, Long ownerId) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + ownerId));
@@ -57,6 +94,26 @@ public class AdminService {
         farm.setLocation(location);
         farm.setImageUrl(imageUrl);
         farm.setOwner(owner);
+        return farmRepository.save(farm);
+    }
+
+    public Farm updateFarm(Long id, String name, String description, String location, String imageUrl, Long ownerId) {
+        Farm farm = farmRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Farm not found with id: " + id));
+
+        if (name != null)
+            farm.setName(name);
+        if (description != null)
+            farm.setDescription(description);
+        if (location != null)
+            farm.setLocation(location);
+        if (imageUrl != null)
+            farm.setImageUrl(imageUrl);
+        if (ownerId != null) {
+            User owner = userRepository.findById(ownerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + ownerId));
+            farm.setOwner(owner);
+        }
         return farmRepository.save(farm);
     }
 
