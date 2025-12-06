@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE experience_events SET deleted = true WHERE id = ?")
+@org.hibernate.annotations.SQLRestriction("deleted = false")
 public class ExperienceEvent {
 
     @Id
@@ -46,6 +48,8 @@ public class ExperienceEvent {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    private boolean deleted = false;
 
     @PrePersist
     protected void onCreate() {

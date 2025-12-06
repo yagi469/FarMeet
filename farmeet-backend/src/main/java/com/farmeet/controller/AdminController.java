@@ -24,6 +24,11 @@ public class AdminController {
         return adminService.getAllUsers();
     }
 
+    @GetMapping("/users/deleted")
+    public List<User> getDeletedUsers() {
+        return adminService.getDeletedUsers();
+    }
+
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         adminService.deleteUser(id);
@@ -35,10 +40,27 @@ public class AdminController {
         return adminService.getAllFarms();
     }
 
+    @GetMapping("/farms/deleted")
+    public List<Farm> getDeletedFarms() {
+        return adminService.getDeletedFarms();
+    }
+
     @DeleteMapping("/farms/{id}")
     public ResponseEntity<Void> deleteFarm(@PathVariable Long id) {
         adminService.deleteFarm(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/users/{id}/restore")
+    public ResponseEntity<Void> restoreUser(@PathVariable Long id) {
+        adminService.restoreUser(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/farms/{id}/restore")
+    public ResponseEntity<Void> restoreFarm(@PathVariable Long id) {
+        adminService.restoreFarm(id);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/farms")

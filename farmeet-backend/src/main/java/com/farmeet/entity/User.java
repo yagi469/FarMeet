@@ -17,6 +17,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
+@org.hibernate.annotations.SQLRestriction("deleted = false")
 public class User implements UserDetails {
 
     @Id
@@ -38,6 +40,8 @@ public class User implements UserDetails {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    private boolean deleted = false;
 
     @PrePersist
     protected void onCreate() {
@@ -67,7 +71,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return !deleted;
     }
 
     public enum Role {

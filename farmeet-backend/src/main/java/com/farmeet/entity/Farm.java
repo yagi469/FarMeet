@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE farms SET deleted = true WHERE id = ?")
+@org.hibernate.annotations.SQLRestriction("deleted = false")
 public class Farm {
 
     @Id
@@ -35,6 +37,8 @@ public class Farm {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    private boolean deleted = false;
 
     @PrePersist
     protected void onCreate() {

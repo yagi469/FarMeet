@@ -320,6 +320,38 @@ class ApiClient {
         return response.json();
     }
 
+    async adminGetDeletedUsers() {
+        const response = await fetch(`${API_BASE_URL}/admin/users/deleted`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch deleted users');
+        return response.json();
+    }
+
+    async adminGetDeletedFarms() {
+        const response = await fetch(`${API_BASE_URL}/admin/farms/deleted`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch deleted farms');
+        return response.json();
+    }
+
+    async adminRestoreUser(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/restore`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to restore user');
+    }
+
+    async adminRestoreFarm(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/farms/${id}/restore`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to restore farm');
+    }
+
     removeToken() {
         removeToken();
     }

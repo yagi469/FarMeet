@@ -18,12 +18,17 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final FarmRepository farmRepository;
+    private final com.farmeet.repository.ExperienceEventRepository experienceEventRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
 
     public AdminService(UserRepository userRepository, FarmRepository farmRepository,
+            com.farmeet.repository.ExperienceEventRepository experienceEventRepository,
             org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.farmRepository = farmRepository;
+        this.experienceEventRepository = experienceEventRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -34,10 +39,35 @@ public class AdminService {
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        // 農園所有者の場合、農園も削除するかどうかの仕様検討が必要だが、
-        // 簡略化のため、Cascade設定に依存するか、ここで削除する。
-        // リスク回避のため、一旦はユーザー削除のみ行う（Cascade設定によっては関連データも消える）
+
+        // Delete all farms (and their events) owned by this user
+        List<Farm> farms = farmRepository.findByOwner(user);
+        for (Farm farm : farms) {
+            deleteFarm(farm.getId());
+        }
+
         userRepository.delete(user);
+    }
+
+    public void restoreUser(Long id) {
+        // Native query to bypass @Where clause and directly update
+        entityManager.createNativeQuery("UPDATE users SET deleted = false WHERE id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+        // Also restore owned farms? Depends on policy. For now, manual restore might be
+        // safer or restore based on logic.
+        // Let's keep it simple: Restore User only. Child entities might need manual
+        // restore or logic.
+        // Actually, if we soft-deleted farms when user was deleted, we might want to
+        // restore them.
+        // But finding which ones were deleted *at that time* vs separately is hard.
+        // Let's just restore the user for now.
+    }
+
+    public void restoreFarm(Long id) {
+        entityManager.createNativeQuery("UPDATE farms SET deleted = false WHERE id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
     }
 
     public List<Farm> getAllFarms() {
@@ -47,6 +77,11 @@ public class AdminService {
     public void deleteFarm(Long id) {
         Farm farm = farmRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Farm not found with id: " + id));
+
+        // Delete all events associated with this farm
+        List<com.farmeet.entity.ExperienceEvent> events = experienceEventRepository.findByFarm(farm);
+        experienceEventRepository.deleteAll(events);
+
         farmRepository.delete(farm);
     }
 
@@ -123,5 +158,15 @@ public class AdminService {
         stats.put("totalFarms", farmRepository.count());
         // 将来的には予約数なども追加
         return stats;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<User> getDeletedUsers() {
+        return entityManager.createNativeQuery("SELECT * FROM users WHERE deleted = true", User.class).getResultList();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Farm> getDeletedFarms() {
+        return entityManager.createNativeQuery("SELECT * FROM farms WHERE deleted = true", Farm.class).getResultList();
     }
 }
