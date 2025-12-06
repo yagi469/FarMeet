@@ -90,6 +90,15 @@ export default function Header() {
                                                     🚜 農家ページ
                                                 </Link>
                                             )}
+                                            {user?.role === 'ADMIN' && (
+                                                <Link
+                                                    href="/admin"
+                                                    className="block px-4 py-3 text-sm text-purple-600 hover:bg-purple-50"
+                                                    onClick={() => setIsMenuOpen(false)}
+                                                >
+                                                    ⚡ 管理者画面
+                                                </Link>
+                                            )}
                                             <hr className="my-2" />
                                             <button
                                                 onClick={handleLogout}

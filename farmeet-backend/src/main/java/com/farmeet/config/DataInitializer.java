@@ -32,10 +32,12 @@ public class DataInitializer implements CommandLineRunner {
 
         @Override
         public void run(String... args) throws Exception {
+                // 管理者ユーザーは常に存在確認・作成する
+                createAdminIfNotExists();
+
                 // 農園データが存在しない場合は全て初期化
                 if (farmRepository.count() == 0) {
                         System.out.println("サンプルデータを初期化中...");
-                        createAdminIfNotExists();
                         User farmer = createFarmerIfNotExists();
                         List<Farm> farms = createSampleFarms(farmer);
                         createSampleEvents(farms);
