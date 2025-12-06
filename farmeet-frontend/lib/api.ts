@@ -289,6 +289,10 @@ class ApiClient {
         if (!response.ok) throw new Error('Failed to get stats');
         return response.json();
     }
+
+    removeToken() {
+        removeToken();
+    }
 }
 
 export const api = new ApiClient();
