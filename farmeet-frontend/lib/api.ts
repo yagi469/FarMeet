@@ -238,6 +238,57 @@ class ApiClient {
         });
         if (!response.ok) throw new Error('Failed to cancel reservation');
     }
+
+    // 管理者
+    async adminGetUsers() {
+        const response = await fetch(`${API_BASE_URL}/admin/users`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get users');
+        return response.json();
+    }
+
+    async adminDeleteUser(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to delete user');
+    }
+
+    async adminGetFarms() {
+        const response = await fetch(`${API_BASE_URL}/admin/farms`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get farms');
+        return response.json();
+    }
+
+    async adminCreateFarm(data: { name: string; description: string; location: string; imageUrl?: string; ownerId: number }) {
+        const response = await fetch(`${API_BASE_URL}/admin/farms`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to create farm');
+        return response.json();
+    }
+
+    async adminDeleteFarm(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/farms/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to delete farm');
+    }
+
+    async adminGetStats() {
+        const response = await fetch(`${API_BASE_URL}/admin/stats`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get stats');
+        return response.json();
+    }
 }
 
 export const api = new ApiClient();

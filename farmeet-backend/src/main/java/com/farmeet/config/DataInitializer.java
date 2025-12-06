@@ -35,6 +35,7 @@ public class DataInitializer implements CommandLineRunner {
                 // 農園データが存在しない場合は全て初期化
                 if (farmRepository.count() == 0) {
                         System.out.println("サンプルデータを初期化中...");
+                        createAdminIfNotExists();
                         User farmer = createFarmerIfNotExists();
                         List<Farm> farms = createSampleFarms(farmer);
                         createSampleEvents(farms);
@@ -87,6 +88,21 @@ public class DataInitializer implements CommandLineRunner {
                 }
                 // デフォルトは野菜
                 return "VEGETABLE";
+        }
+
+        private void createAdminIfNotExists() {
+                String email = "admin@example.com";
+                userRepository.findByEmail(email).ifPresentOrElse(
+                                user -> System.out.println("Admin user already exists."),
+                                () -> {
+                                        User user = new User();
+                                        user.setUsername("admin");
+                                        user.setEmail(email);
+                                        user.setPassword(passwordEncoder.encode("admin123"));
+                                        user.setRole(User.Role.ADMIN);
+                                        userRepository.save(user);
+                                        System.out.println("Created admin user: " + email);
+                                });
         }
 
         private User createFarmerIfNotExists() {
