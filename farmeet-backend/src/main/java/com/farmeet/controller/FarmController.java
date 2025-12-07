@@ -21,7 +21,7 @@ public class FarmController {
     private FarmService farmService;
 
     @GetMapping
-    public ResponseEntity<List<com.farmeet.dto.FarmDto>> getAllFarms() {
+    public ResponseEntity<List<FarmDto>> getAllFarms() {
         return ResponseEntity.ok(farmService.getAllFarms());
     }
 
