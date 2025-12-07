@@ -44,6 +44,15 @@ class ApiClient {
         return response.json();
     }
 
+    async checkEmail(email: string): Promise<boolean> {
+        const response = await fetch(`${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) throw new Error('Email check failed');
+        return response.json();
+    }
+
     async login(email: string, password: string) {
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',

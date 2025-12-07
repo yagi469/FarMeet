@@ -52,4 +52,9 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
+        return ResponseEntity.ok(authService.checkEmail(email));
+    }
 }

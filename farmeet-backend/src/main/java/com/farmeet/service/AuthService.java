@@ -105,4 +105,8 @@ public class AuthService {
 
         return userRepository.save(user);
     }
+
+    public boolean checkEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
 }
