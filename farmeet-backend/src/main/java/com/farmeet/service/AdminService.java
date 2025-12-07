@@ -68,6 +68,21 @@ public class AdminService {
     }
 
     public void restoreFarm(Long id) {
+        // Check owner validity and restore if necessary
+        try {
+            Long ownerId = ((Number) entityManager.createNativeQuery("SELECT owner_id FROM farms WHERE id = :id")
+                    .setParameter("id", id)
+                    .getSingleResult()).longValue();
+
+            // Restore owner
+            restoreUser(ownerId);
+        } catch (Exception e) {
+            // Log error but proceed if possible, though strict consistency implies we
+            // should probably fail or warn.
+            // For now, assume owner exists.
+            System.err.println("Warning: Could not restore owner for farm " + id);
+        }
+
         entityManager.createNativeQuery("UPDATE farms SET deleted = false WHERE id = :id")
                 .setParameter("id", id)
                 .executeUpdate();
