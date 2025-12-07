@@ -2,6 +2,7 @@ package com.farmeet.controller;
 
 import com.farmeet.entity.Farm;
 import com.farmeet.entity.User;
+import com.farmeet.dto.FarmDto;
 import com.farmeet.service.AdminService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,12 +37,12 @@ public class AdminController {
     }
 
     @GetMapping("/farms")
-    public List<Farm> getAllFarms() {
+    public List<FarmDto> getAllFarms() {
         return adminService.getAllFarms();
     }
 
     @GetMapping("/farms/deleted")
-    public List<Farm> getDeletedFarms() {
+    public List<FarmDto> getDeletedFarms() {
         return adminService.getDeletedFarms();
     }
 

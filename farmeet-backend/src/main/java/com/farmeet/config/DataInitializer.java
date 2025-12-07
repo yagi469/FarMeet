@@ -9,6 +9,7 @@ import com.farmeet.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,13 +22,19 @@ public class DataInitializer implements CommandLineRunner {
         private final FarmRepository farmRepository;
         private final ExperienceEventRepository eventRepository;
         private final PasswordEncoder passwordEncoder;
+        private final TransactionTemplate transactionTemplate;
+
+        @jakarta.persistence.PersistenceContext
+        private jakarta.persistence.EntityManager entityManager;
 
         public DataInitializer(UserRepository userRepository, FarmRepository farmRepository,
-                        ExperienceEventRepository eventRepository, PasswordEncoder passwordEncoder) {
+                        ExperienceEventRepository eventRepository, PasswordEncoder passwordEncoder,
+                        TransactionTemplate transactionTemplate) {
                 this.userRepository = userRepository;
                 this.farmRepository = farmRepository;
                 this.eventRepository = eventRepository;
                 this.passwordEncoder = passwordEncoder;
+                this.transactionTemplate = transactionTemplate;
         }
 
         @Override
@@ -35,13 +42,26 @@ public class DataInitializer implements CommandLineRunner {
                 // 管理者ユーザーは常に存在確認・作成する
                 createAdminIfNotExists();
 
-                // 農園データが存在しない場合は全て初期化
-                if (farmRepository.count() == 0) {
+                // 物理的に農園データが存在するか確認（削除済み含む）
+                Number totalFarmsObj = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM farms").getSingleResult();
+                long totalFarms = totalFarmsObj.longValue();
+
+                if (totalFarms == 0) {
+                        // データが全くない場合：新規作成
                         System.out.println("サンプルデータを初期化中...");
                         User farmer = createFarmerIfNotExists();
                         List<Farm> farms = createSampleFarms(farmer);
                         createSampleEvents(farms);
                         System.out.println("サンプルデータの初期化が完了しました。");
+                } else if (farmRepository.count() == 0) {
+                        // 物理データはあるが、論理データがない（全て論理削除されている）場合：復元
+                        System.out.println("論理削除された農園データを復元中...");
+                        transactionTemplate.execute(status -> {
+                                entityManager.createNativeQuery("UPDATE farms SET deleted = false").executeUpdate();
+                                entityManager.createNativeQuery("UPDATE experience_events SET deleted = false").executeUpdate();
+                                return null;
+                        });
+                        System.out.println("農園データの復元が完了しました。");
                 }
                 // 農園データは存在するがイベントが存在しない場合はイベントのみ追加
                 else if (eventRepository.count() == 0) {
@@ -94,6 +114,16 @@ public class DataInitializer implements CommandLineRunner {
 
         private void createAdminIfNotExists() {
                 String email = "admin@example.com";
+
+                // Execute update in transaction
+                transactionTemplate.execute(status -> {
+                        // Restore if exists but deleted (bypassing @SQLRestriction)
+                        entityManager.createNativeQuery("UPDATE users SET deleted = false WHERE email = :email")
+                                        .setParameter("email", email)
+                                        .executeUpdate();
+                        return null;
+                });
+
                 userRepository.findByEmail(email).ifPresentOrElse(
                                 user -> System.out.println("Admin user already exists."),
                                 () -> {
@@ -109,13 +139,23 @@ public class DataInitializer implements CommandLineRunner {
 
         private User createFarmerIfNotExists() {
                 String email = "tanaka@example.com";
+
+                // Execute update in transaction
+                transactionTemplate.execute(status -> {
+                        // Restore if exists but deleted
+                        entityManager.createNativeQuery("UPDATE users SET deleted = false WHERE email = :email")
+                                        .setParameter("email", email)
+                                        .executeUpdate();
+                        return null;
+                });
+
                 return userRepository.findByEmail(email).orElseGet(() -> {
                         User user = new User();
                         user.setUsername("tanaka_farm");
                         user.setEmail(email);
                         user.setPassword(passwordEncoder.encode("password123"));
                         user.setRole(User.Role.FARMER);
-                        return userRepository.save(user);
+                        return userRepository.saveAndFlush(user);
                 });
         }
 

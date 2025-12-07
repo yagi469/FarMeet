@@ -2,12 +2,15 @@ package com.farmeet.service;
 
 import com.farmeet.entity.Farm;
 import com.farmeet.entity.User;
+import com.farmeet.dto.FarmDto;
+import com.farmeet.dto.UserDto;
 import com.farmeet.exception.ResourceNotFoundException;
 import com.farmeet.repository.FarmRepository;
 import com.farmeet.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,8 +73,20 @@ public class AdminService {
                 .executeUpdate();
     }
 
-    public List<Farm> getAllFarms() {
-        return farmRepository.findAll();
+    public List<FarmDto> getAllFarms() {
+        List<Farm> farms = farmRepository.findAll();
+        return farms.stream().map(farm -> {
+            FarmDto dto = new FarmDto();
+            dto.setId(farm.getId());
+            dto.setName(farm.getName());
+            dto.setDescription(farm.getDescription());
+            dto.setLocation(farm.getLocation());
+            dto.setImageUrl(farm.getImageUrl());
+            if (farm.getOwner() != null) {
+                dto.setOwner(UserDto.fromEntity(farm.getOwner()));
+            }
+            return dto;
+        }).toList();
     }
 
     public void deleteFarm(Long id) {
@@ -166,7 +181,46 @@ public class AdminService {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Farm> getDeletedFarms() {
-        return entityManager.createNativeQuery("SELECT * FROM farms WHERE deleted = true", Farm.class).getResultList();
+    public List<FarmDto> getDeletedFarms() {
+        // Use native query to get all deleted farms
+        String sql = "SELECT f.* FROM farms f WHERE f.deleted = true";
+        List<Farm> deletedFarms = entityManager.createNativeQuery(sql, Farm.class).getResultList();
+
+        List<FarmDto> dtos = new ArrayList<>();
+
+        for (Farm farm : deletedFarms) {
+            FarmDto dto = new FarmDto();
+            dto.setId(farm.getId());
+            dto.setName(farm.getName());
+            dto.setDescription(farm.getDescription());
+            dto.setLocation(farm.getLocation());
+            dto.setImageUrl(farm.getImageUrl());
+
+            // For each farm, manually load the owner ignoring the restriction
+            try {
+                Object ownerIdObj = entityManager.createNativeQuery("SELECT owner_id FROM farms WHERE id = :farmId")
+                        .setParameter("farmId", farm.getId())
+                        .getSingleResult();
+
+                if (ownerIdObj != null) {
+                    Long ownerId = ((Number) ownerIdObj).longValue();
+                    // Fetch the user natively to bypass @SQLRestriction
+                    List<User> owners = entityManager
+                            .createNativeQuery("SELECT * FROM users WHERE id = :id", User.class)
+                            .setParameter("id", ownerId)
+                            .getResultList();
+                    if (!owners.isEmpty()) {
+                        dto.setOwner(UserDto.fromEntity(owners.get(0)));
+                    }
+                }
+            } catch (Exception e) {
+                // Log or handle error, e.g owner might be hard deleted (unlikely given soft
+                // delete)
+                System.err.println("Error fetching owner for deleted farm " + farm.getId() + ": " + e.getMessage());
+            }
+            dtos.add(dto);
+        }
+
+        return dtos;
     }
 }

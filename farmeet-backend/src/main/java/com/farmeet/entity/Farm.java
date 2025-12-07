@@ -29,7 +29,7 @@ public class Farm {
     @Column(nullable = false)
     private String location;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 

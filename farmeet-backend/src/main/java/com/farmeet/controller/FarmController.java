@@ -1,5 +1,6 @@
 package com.farmeet.controller;
 
+import com.farmeet.dto.FarmDto;
 import com.farmeet.entity.Farm;
 import com.farmeet.entity.User;
 import com.farmeet.service.FarmService;
@@ -20,7 +21,7 @@ public class FarmController {
     private FarmService farmService;
 
     @GetMapping
-    public ResponseEntity<List<Farm>> getAllFarms() {
+    public ResponseEntity<List<com.farmeet.dto.FarmDto>> getAllFarms() {
         return ResponseEntity.ok(farmService.getAllFarms());
     }
 
@@ -46,13 +47,13 @@ public class FarmController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Farm>> searchFarms(
+    public ResponseEntity<List<FarmDto>> searchFarms(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) Integer guests,
             @RequestParam(required = false) String category) {
-        List<Farm> farms = farmService.searchFarms(keyword, location, date, guests, category);
+        List<FarmDto> farms = farmService.searchFarms(keyword, location, date, guests, category);
         return ResponseEntity.ok(farms);
     }
 

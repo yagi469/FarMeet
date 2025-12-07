@@ -1,5 +1,6 @@
 package com.farmeet.service;
 
+import com.farmeet.dto.FarmDto;
 import com.farmeet.entity.ExperienceEvent;
 import com.farmeet.entity.Farm;
 import com.farmeet.entity.User;
@@ -23,8 +24,19 @@ public class FarmService {
     @Autowired
     private ExperienceEventRepository eventRepository;
 
-    public List<Farm> getAllFarms() {
-        return farmRepository.findAll();
+    public List<FarmDto> getAllFarms() {
+        return farmRepository.findAll().stream().map(farm -> {
+            FarmDto dto = new FarmDto();
+            dto.setId(farm.getId());
+            dto.setName(farm.getName());
+            dto.setDescription(farm.getDescription());
+            dto.setLocation(farm.getLocation());
+            dto.setImageUrl(farm.getImageUrl());
+            if (farm.getOwner() != null) {
+                dto.setOwner(com.farmeet.dto.UserDto.fromEntity(farm.getOwner()));
+            }
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     public Farm getFarmById(Long id) {
@@ -69,7 +81,8 @@ public class FarmService {
     }
 
     // 検索機能（キーワード、地域、日程、人数、カテゴリで絞り込み）
-    public List<Farm> searchFarms(String keyword, String location, LocalDate date, Integer guests, String category) {
+    public List<com.farmeet.dto.FarmDto> searchFarms(String keyword, String location, LocalDate date, Integer guests,
+            String category) {
         List<Farm> farms;
         int totalGuests = guests != null ? guests : 0;
         boolean hasCategory = category != null && !category.isEmpty();
@@ -126,7 +139,18 @@ public class FarmService {
                     .collect(Collectors.toList());
         }
 
-        return farms;
+        return farms.stream().map(farm -> {
+            com.farmeet.dto.FarmDto dto = new com.farmeet.dto.FarmDto();
+            dto.setId(farm.getId());
+            dto.setName(farm.getName());
+            dto.setDescription(farm.getDescription());
+            dto.setLocation(farm.getLocation());
+            dto.setImageUrl(farm.getImageUrl());
+            if (farm.getOwner() != null) {
+                dto.setOwner(com.farmeet.dto.UserDto.fromEntity(farm.getOwner()));
+            }
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     // 地域一覧を取得（重複なし）
