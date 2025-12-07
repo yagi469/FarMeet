@@ -47,13 +47,23 @@ public class DataInitializer implements CommandLineRunner {
                                 .getSingleResult();
                 long totalFarms = totalFarmsObj.longValue();
 
-                if (totalFarms == 0) {
-                        // データが全くない場合：新規作成
-                        System.out.println("サンプルデータを初期化中...");
+                // 最新のサンプルデータ（緑の里オーガニック農園）があるか確認
+                boolean newSamplesExist = false;
+                if (totalFarms > 0) {
+                        Farm checkFarm = farmRepository.findByName("緑の里オーガニック農園");
+                        newSamplesExist = (checkFarm != null);
+                }
+
+                if (totalFarms == 0 || !newSamplesExist) {
+                        System.out.println("新しいサンプルデータを追加中...");
                         User farmer = createFarmerIfNotExists();
-                        List<Farm> farms = createSampleFarms(farmer);
-                        createSampleEvents(farms);
-                        System.out.println("サンプルデータの初期化が完了しました。");
+                        // 既存のデータがあっても、新しいサンプルセット（10件）を追加する
+                        // 重複を避けるため、ここでは newSamplesExist == false の場合のみ実行される
+                        if (!newSamplesExist) {
+                                List<Farm> farms = createSampleFarms(farmer);
+                                createSampleEvents(farms);
+                        }
+                        System.out.println("サンプルデータの追加が完了しました。");
                 } else if (farmRepository.count() == 0) {
                         // 物理データはあるが、論理データがない（全て論理削除されている）場合：復元
                         System.out.println("論理削除された農園データを復元中...");
@@ -65,7 +75,8 @@ public class DataInitializer implements CommandLineRunner {
                         });
                         System.out.println("農園データの復元が完了しました。");
                 }
-                // 農園データは存在するがイベントが存在しない場合はイベントのみ追加
+                // （以下のイベント初期化ロジックは今回追加した新データには適用済みなので、既存の古いデータ向けに残すか、あるいはスキップするか）
+                // ここでは既存ロジックを維持しつつ、farmRepository.findAll() で全件取得すると重複処理になる可能性があるため
                 else if (eventRepository.count() == 0) {
                         System.out.println("イベントデータを初期化中...");
                         List<Farm> farms = farmRepository.findAll();
