@@ -6,11 +6,9 @@ import { api } from '@/lib/api';
 import { authHelper } from '@/lib/auth';
 import { Farm, ExperienceEvent } from '@/types';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar"; // Assuming shadcn/ui calendar exists
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { MapPin, User as UserIcon, Check } from 'lucide-react';
 import { ja } from 'date-fns/locale';
 
@@ -65,7 +63,7 @@ export default function FarmDetailPage() {
     if (!farm) return <div className="text-center py-20">農園が見つかりませんでした</div>;
 
     // Use dummy images if list is empty (fallback)
-    const images = (farm.images && farm.images.length > 0) ? farm.images : [farm.imageUrl || '/placeholder.jpg'];
+    const images = (farm.images && farm.images.length > 0) ? farm.images : [farm.imageUrl];
     const features = farm.features || [];
 
     return (
@@ -82,19 +80,19 @@ export default function FarmDetailPage() {
             {/* Image Grid */}
             <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[400px] mb-8 rounded-xl overflow-hidden">
                 <div className="col-span-2 row-span-2">
-                    <img src={images[0]} alt="Main" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
+                    <ImageWithFallback src={images[0]} alt="Main" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
                 </div>
                 <div className="col-span-1 row-span-1">
-                    <img src={images[1] || images[0]} alt="Sub 1" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
+                    <ImageWithFallback src={images[1] || images[0]} alt="Sub 1" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
                 </div>
                 <div className="col-span-1 row-span-1">
-                    <img src={images[2] || images[0]} alt="Sub 2" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
+                    <ImageWithFallback src={images[2] || images[0]} alt="Sub 2" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
                 </div>
                 <div className="col-span-1 row-span-1">
-                    <img src={images[3] || images[0]} alt="Sub 3" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
+                    <ImageWithFallback src={images[3] || images[0]} alt="Sub 3" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
                 </div>
                 <div className="col-span-1 row-span-1">
-                    <img src={images[4] || images[0]} alt="Sub 4" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
+                    <ImageWithFallback src={images[4] || images[0]} alt="Sub 4" className="w-full h-full object-cover hover:opacity-90 transition cursor-pointer" />
                 </div>
             </div>
 
@@ -192,5 +190,28 @@ export default function FarmDetailPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+function ImageWithFallback({ src, alt, className }: { src: string | undefined, alt: string, className?: string }) {
+    const [error, setError] = useState(false);
+
+    if (!src || error) {
+        return (
+            <div className={`bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center ${className}`}>
+                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </div>
+        );
+    }
+
+    return (
+        <img
+            src={src}
+            alt={alt}
+            className={className}
+            onError={() => setError(true)}
+        />
     );
 }
