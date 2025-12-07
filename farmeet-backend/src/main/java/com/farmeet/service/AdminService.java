@@ -243,4 +243,78 @@ public class AdminService {
 
         return dtos;
     }
+
+    public List<com.farmeet.dto.ExperienceEventDto> getAllEvents() {
+        return experienceEventRepository.findAll().stream()
+                .map(com.farmeet.dto.ExperienceEventDto::fromEntity)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<com.farmeet.dto.ExperienceEventDto> getDeletedEvents() {
+        String sql = "SELECT * FROM experience_events WHERE deleted = true";
+        List<com.farmeet.entity.ExperienceEvent> deletedEvents = entityManager
+                .createNativeQuery(sql, com.farmeet.entity.ExperienceEvent.class).getResultList();
+
+        return deletedEvents.stream()
+                .map(com.farmeet.dto.ExperienceEventDto::fromEntity)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public com.farmeet.entity.ExperienceEvent createEventByAdmin(Long farmId, String title, String description,
+            java.time.LocalDateTime eventDate, Integer capacity, java.math.BigDecimal price, String category) {
+        Farm farm = farmRepository.findById(farmId)
+                .orElseThrow(() -> new ResourceNotFoundException("Farm not found with id: " + farmId));
+
+        com.farmeet.entity.ExperienceEvent event = new com.farmeet.entity.ExperienceEvent();
+        event.setFarm(farm);
+        event.setTitle(title);
+        event.setDescription(description);
+        event.setEventDate(eventDate);
+        event.setCapacity(capacity);
+        event.setAvailableSlots(capacity); // Default to capacity
+        event.setPrice(price);
+        event.setCategory(category);
+
+        return experienceEventRepository.save(event);
+    }
+
+    public com.farmeet.entity.ExperienceEvent updateEventByAdmin(Long id, Long farmId, String title, String description,
+            java.time.LocalDateTime eventDate, Integer capacity, java.math.BigDecimal price, String category) {
+        com.farmeet.entity.ExperienceEvent event = experienceEventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + id));
+
+        if (farmId != null) {
+            Farm farm = farmRepository.findById(farmId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Farm not found with id: " + farmId));
+            event.setFarm(farm);
+        }
+        if (title != null)
+            event.setTitle(title);
+        if (description != null)
+            event.setDescription(description);
+        if (eventDate != null)
+            event.setEventDate(eventDate);
+        if (capacity != null) {
+            event.setCapacity(capacity);
+        }
+        if (price != null)
+            event.setPrice(price);
+        if (category != null)
+            event.setCategory(category);
+
+        return experienceEventRepository.save(event);
+    }
+
+    public void deleteEvent(Long id) {
+        com.farmeet.entity.ExperienceEvent event = experienceEventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + id));
+        experienceEventRepository.delete(event);
+    }
+
+    public void restoreEvent(Long id) {
+        entityManager.createNativeQuery("UPDATE experience_events SET deleted = false WHERE id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+    }
 }

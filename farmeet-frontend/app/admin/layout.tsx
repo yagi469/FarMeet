@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { LayoutDashboard, Users, Tractor, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Tractor, LogOut, Calendar } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -39,6 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'ダッシュボード', href: '/admin', icon: LayoutDashboard },
         { name: 'ユーザー管理', href: '/admin/users', icon: Users },
         { name: '農園管理', href: '/admin/farms', icon: Tractor },
+        { name: 'イベント管理', href: '/admin/events', icon: Calendar },
     ];
 
     const handleLogout = () => {

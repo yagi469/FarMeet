@@ -352,6 +352,75 @@ class ApiClient {
         if (!response.ok) throw new Error('Failed to restore farm');
     }
 
+    // 管理者 - イベント
+    async adminGetEvents() {
+        const response = await fetch(`${API_BASE_URL}/admin/events`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get events');
+        return response.json();
+    }
+
+    async adminGetDeletedEvents() {
+        const response = await fetch(`${API_BASE_URL}/admin/events/deleted`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get deleted events');
+        return response.json();
+    }
+
+    async adminCreateEvent(data: {
+        farmId: number;
+        title: string;
+        description: string;
+        eventDate: string;
+        capacity: number;
+        price: number;
+        category: string;
+    }) {
+        const response = await fetch(`${API_BASE_URL}/admin/events`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to create event');
+        return response.json();
+    }
+
+    async adminUpdateEvent(id: number, data: {
+        farmId: number;
+        title: string;
+        description: string;
+        eventDate: string;
+        capacity: number;
+        price: number;
+        category: string;
+    }) {
+        const response = await fetch(`${API_BASE_URL}/admin/events/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update event');
+        return response.json();
+    }
+
+    async adminDeleteEvent(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/events/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to delete event');
+    }
+
+    async adminRestoreEvent(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/events/${id}/restore`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to restore event');
+    }
+
     removeToken() {
         removeToken();
     }
