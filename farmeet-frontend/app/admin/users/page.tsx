@@ -30,6 +30,9 @@ export default function AdminUsersPage() {
         role: 'USER'
     });
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
     const fetchUsers = async () => {
         setIsLoading(true);
         try {
@@ -49,6 +52,45 @@ export default function AdminUsersPage() {
     useEffect(() => {
         fetchUsers();
     }, [showDeleted]);
+
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortedAndFilteredUsers = () => {
+        let result = [...users];
+
+        // Filter
+        if (searchTerm) {
+            const lowerTerm = searchTerm.toLowerCase();
+            result = result.filter(user =>
+                user.username.toLowerCase().includes(lowerTerm) ||
+                user.email.toLowerCase().includes(lowerTerm) ||
+                user.id.toString().includes(lowerTerm)
+            );
+        }
+
+        // Sort
+        if (sortConfig) {
+            result.sort((a: any, b: any) => {
+                if (a[sortConfig.key] < b[sortConfig.key]) {
+                    return sortConfig.direction === 'asc' ? -1 : 1;
+                }
+                if (a[sortConfig.key] > b[sortConfig.key]) {
+                    return sortConfig.direction === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+
+        return result;
+    };
+
+    const filteredUsers = getSortedAndFilteredUsers();
 
     const handleDelete = async (id: number) => {
         if (!confirm('本当にこのユーザーを削除（BAN）しますか？')) return;
@@ -125,6 +167,12 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900">ユーザー管理</h1>
                 <div className="flex items-center gap-4">
+                    <Input
+                        placeholder="検索 (名前, Email, ID)..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-64"
+                    />
                     <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none bg-white px-3 py-2 rounded-md border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">
                         <input
                             type="checkbox"
@@ -209,15 +257,23 @@ export default function AdminUsersPage() {
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 border-b">
                         <tr>
-                            <th className="px-6 py-4 font-medium text-gray-500 text-sm">ID</th>
-                            <th className="px-6 py-4 font-medium text-gray-500 text-sm">ユーザー名</th>
-                            <th className="px-6 py-4 font-medium text-gray-500 text-sm">メールアドレス</th>
-                            <th className="px-6 py-4 font-medium text-gray-500 text-sm">権限</th>
+                            <th className="px-6 py-4 font-medium text-gray-500 text-sm cursor-pointer hover:bg-gray-100" onClick={() => handleSort('id')}>
+                                ID {sortConfig?.key === 'id' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                            </th>
+                            <th className="px-6 py-4 font-medium text-gray-500 text-sm cursor-pointer hover:bg-gray-100" onClick={() => handleSort('username')}>
+                                ユーザー名 {sortConfig?.key === 'username' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                            </th>
+                            <th className="px-6 py-4 font-medium text-gray-500 text-sm cursor-pointer hover:bg-gray-100" onClick={() => handleSort('email')}>
+                                メールアドレス {sortConfig?.key === 'email' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                            </th>
+                            <th className="px-6 py-4 font-medium text-gray-500 text-sm cursor-pointer hover:bg-gray-100" onClick={() => handleSort('role')}>
+                                権限 {sortConfig?.key === 'role' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                            </th>
                             <th className="px-6 py-4 font-medium text-gray-500 text-sm text-right">操作</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {users.map((user) => (
+                        {filteredUsers.map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 text-sm text-gray-600">#{user.id}</td>
                                 <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.username}</td>
@@ -261,7 +317,7 @@ export default function AdminUsersPage() {
                                 </td>
                             </tr>
                         ))}
-                        {users.length === 0 && (
+                        {filteredUsers.length === 0 && (
                             <tr>
                                 <td colSpan={5} className="px-6 py-8 text-center text-gray-500 text-sm">
                                     ユーザーが見つかりません

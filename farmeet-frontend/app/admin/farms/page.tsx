@@ -45,6 +45,9 @@ export default function AdminFarmsPage() {
         ownerId: ''
     });
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
     const fetchData = async () => {
         setIsLoading(true);
         try {
@@ -66,6 +69,55 @@ export default function AdminFarmsPage() {
     useEffect(() => {
         fetchData();
     }, [showDeleted]);
+
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const getSortedAndFilteredFarms = () => {
+        let result = [...farms];
+
+        // Filter
+        if (searchTerm) {
+            const lowerTerm = searchTerm.toLowerCase();
+            result = result.filter(farm =>
+                farm.name.toLowerCase().includes(lowerTerm) ||
+                farm.location.toLowerCase().includes(lowerTerm) ||
+                farm.owner.username.toLowerCase().includes(lowerTerm) ||
+                farm.id.toString().includes(lowerTerm)
+            );
+        }
+
+        // Sort
+        if (sortConfig) {
+            result.sort((a: any, b: any) => {
+                let aValue = a[sortConfig.key];
+                let bValue = b[sortConfig.key];
+
+                // Handle nested sorting for owner
+                if (sortConfig.key === 'owner') {
+                    aValue = a.owner.username;
+                    bValue = b.owner.username;
+                }
+
+                if (aValue < bValue) {
+                    return sortConfig.direction === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+
+        return result;
+    };
+
+    const filteredFarms = getSortedAndFilteredFarms();
 
     const handleDelete = async (id: number) => {
         if (!confirm('本当にこの農園を削除しますか？')) return;
@@ -140,6 +192,12 @@ export default function AdminFarmsPage() {
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900">農園管理</h1>
                 <div className="flex items-center gap-4">
+                    <Input
+                        placeholder="検索 (農園名, 場所, オーナー)..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-64"
+                    />
                     <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none bg-white px-3 py-2 rounded-md border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">
                         <input
                             type="checkbox"
@@ -231,14 +289,20 @@ export default function AdminFarmsPage() {
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 border-b">
                         <tr>
-                            <th className="px-6 py-4 font-medium text-gray-500 text-sm">ID</th>
-                            <th className="px-6 py-4 font-medium text-gray-500 text-sm">農園情報</th>
-                            <th className="px-6 py-4 font-medium text-gray-500 text-sm">オーナー</th>
+                            <th className="px-6 py-4 font-medium text-gray-500 text-sm cursor-pointer hover:bg-gray-100" onClick={() => handleSort('id')}>
+                                ID {sortConfig?.key === 'id' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                            </th>
+                            <th className="px-6 py-4 font-medium text-gray-500 text-sm cursor-pointer hover:bg-gray-100" onClick={() => handleSort('name')}>
+                                農園情報 {sortConfig?.key === 'name' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                            </th>
+                            <th className="px-6 py-4 font-medium text-gray-500 text-sm cursor-pointer hover:bg-gray-100" onClick={() => handleSort('owner')}>
+                                オーナー {sortConfig?.key === 'owner' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                            </th>
                             <th className="px-6 py-4 font-medium text-gray-500 text-sm text-right">操作</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {farms.map((farm) => (
+                        {filteredFarms.map((farm) => (
                             <tr key={farm.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-6 py-4 text-sm text-gray-600">#{farm.id}</td>
                                 <td className="px-6 py-4">
@@ -289,7 +353,7 @@ export default function AdminFarmsPage() {
                                 </td>
                             </tr>
                         ))}
-                        {farms.length === 0 && (
+                        {filteredFarms.length === 0 && (
                             <tr>
                                 <td colSpan={4} className="px-6 py-8 text-center text-gray-500 text-sm">
                                     農園が見つかりません
