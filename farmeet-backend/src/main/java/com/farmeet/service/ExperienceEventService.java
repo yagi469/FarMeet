@@ -27,6 +27,12 @@ public class ExperienceEventService {
         return eventRepository.findByFarmId(farmId);
     }
 
+    public List<com.farmeet.dto.ExperienceEventDto> getEventsDtoByFarm(Long farmId) {
+        return getEventsByFarm(farmId).stream()
+                .map(com.farmeet.dto.ExperienceEventDto::fromEntity)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public ExperienceEvent createEvent(ExperienceEvent event) {
         return eventRepository.save(event);
     }

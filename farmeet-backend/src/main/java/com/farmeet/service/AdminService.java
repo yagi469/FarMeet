@@ -86,6 +86,11 @@ public class AdminService {
         entityManager.createNativeQuery("UPDATE farms SET deleted = false WHERE id = :id")
                 .setParameter("id", id)
                 .executeUpdate();
+
+        // Also restore associated events
+        entityManager.createNativeQuery("UPDATE experience_events SET deleted = false WHERE farm_id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
     }
 
     public List<FarmDto> getAllFarms() {

@@ -26,9 +26,9 @@ public class FarmController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Farm> getFarmById(@PathVariable Long id) {
+    public ResponseEntity<FarmDto> getFarmById(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(farmService.getFarmById(id));
+            return ResponseEntity.ok(farmService.getFarmDtoById(id));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

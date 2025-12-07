@@ -32,8 +32,8 @@ public class ExperienceEventController {
     }
 
     @GetMapping("/farm/{farmId}")
-    public ResponseEntity<List<ExperienceEvent>> getEventsByFarm(@PathVariable Long farmId) {
-        return ResponseEntity.ok(eventService.getEventsByFarm(farmId));
+    public ResponseEntity<List<com.farmeet.dto.ExperienceEventDto>> getEventsByFarm(@PathVariable Long farmId) {
+        return ResponseEntity.ok(eventService.getEventsDtoByFarm(farmId));
     }
 
     @PostMapping

@@ -44,6 +44,11 @@ public class FarmService {
                 .orElseThrow(() -> new RuntimeException("Farm not found"));
     }
 
+    public FarmDto getFarmDtoById(Long id) {
+        Farm farm = getFarmById(id);
+        return FarmDto.fromEntity(farm);
+    }
+
     public Farm createFarm(Farm farm, User owner) {
         farm.setOwner(owner);
         return farmRepository.save(farm);
