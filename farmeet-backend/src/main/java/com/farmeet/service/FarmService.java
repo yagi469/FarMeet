@@ -25,18 +25,9 @@ public class FarmService {
     private ExperienceEventRepository eventRepository;
 
     public List<FarmDto> getAllFarms() {
-        return farmRepository.findAll().stream().map(farm -> {
-            FarmDto dto = new FarmDto();
-            dto.setId(farm.getId());
-            dto.setName(farm.getName());
-            dto.setDescription(farm.getDescription());
-            dto.setLocation(farm.getLocation());
-            dto.setImageUrl(farm.getImageUrl());
-            if (farm.getOwner() != null) {
-                dto.setOwner(com.farmeet.dto.UserDto.fromEntity(farm.getOwner()));
-            }
-            return dto;
-        }).collect(Collectors.toList());
+        return farmRepository.findAll().stream()
+                .map(FarmDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
     public Farm getFarmById(Long id) {
@@ -144,18 +135,9 @@ public class FarmService {
                     .collect(Collectors.toList());
         }
 
-        return farms.stream().map(farm -> {
-            com.farmeet.dto.FarmDto dto = new com.farmeet.dto.FarmDto();
-            dto.setId(farm.getId());
-            dto.setName(farm.getName());
-            dto.setDescription(farm.getDescription());
-            dto.setLocation(farm.getLocation());
-            dto.setImageUrl(farm.getImageUrl());
-            if (farm.getOwner() != null) {
-                dto.setOwner(com.farmeet.dto.UserDto.fromEntity(farm.getOwner()));
-            }
-            return dto;
-        }).collect(Collectors.toList());
+        return farms.stream()
+                .map(FarmDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
     // 地域一覧を取得（重複なし）

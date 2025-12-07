@@ -1,5 +1,7 @@
 package com.farmeet.dto;
 
+import java.util.List;
+
 import com.farmeet.entity.Farm;
 import lombok.Data;
 
@@ -10,6 +12,8 @@ public class FarmDto {
     private String description;
     private String location;
     private String imageUrl;
+    private List<String> images;
+    private List<String> features;
     private UserDto owner;
 
     public static FarmDto fromEntity(Farm farm) {
@@ -19,6 +23,8 @@ public class FarmDto {
         dto.setDescription(farm.getDescription());
         dto.setLocation(farm.getLocation());
         dto.setImageUrl(farm.getImageUrl());
+        dto.setImages(farm.getImages());
+        dto.setFeatures(farm.getFeatures());
         if (farm.getOwner() != null) {
             dto.setOwner(UserDto.fromEntity(farm.getOwner()));
         }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "farms")
@@ -37,6 +38,16 @@ public class Farm {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "farm_images", joinColumns = @JoinColumn(name = "farm_id"))
+    @Column(name = "image_url")
+    private List<String> images;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "farm_features", joinColumns = @JoinColumn(name = "farm_id"))
+    @Column(name = "feature")
+    private List<String> features;
 
     private boolean deleted = false;
 

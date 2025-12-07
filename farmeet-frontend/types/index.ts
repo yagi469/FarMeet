@@ -4,6 +4,7 @@ export interface User {
     username: string;
     email: string;
     role: 'USER' | 'FARMER' | 'ADMIN';
+    avatarUrl?: string;
 }
 
 export interface Farm {
@@ -13,6 +14,8 @@ export interface Farm {
     location: string;
     owner: User;
     imageUrl?: string;
+    images?: string[];
+    features?: string[];
     createdAt: string;
 }
 

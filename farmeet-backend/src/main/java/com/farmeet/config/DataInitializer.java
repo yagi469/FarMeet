@@ -43,7 +43,8 @@ public class DataInitializer implements CommandLineRunner {
                 createAdminIfNotExists();
 
                 // 物理的に農園データが存在するか確認（削除済み含む）
-                Number totalFarmsObj = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM farms").getSingleResult();
+                Number totalFarmsObj = (Number) entityManager.createNativeQuery("SELECT COUNT(*) FROM farms")
+                                .getSingleResult();
                 long totalFarms = totalFarmsObj.longValue();
 
                 if (totalFarms == 0) {
@@ -58,7 +59,8 @@ public class DataInitializer implements CommandLineRunner {
                         System.out.println("論理削除された農園データを復元中...");
                         transactionTemplate.execute(status -> {
                                 entityManager.createNativeQuery("UPDATE farms SET deleted = false").executeUpdate();
-                                entityManager.createNativeQuery("UPDATE experience_events SET deleted = false").executeUpdate();
+                                entityManager.createNativeQuery("UPDATE experience_events SET deleted = false")
+                                                .executeUpdate();
                                 return null;
                         });
                         System.out.println("農園データの復元が完了しました。");
@@ -112,7 +114,7 @@ public class DataInitializer implements CommandLineRunner {
                 return "VEGETABLE";
         }
 
-        private void createAdminIfNotExists() {
+        private User createAdminIfNotExists() {
                 String email = "admin@example.com";
 
                 // Execute update in transaction
@@ -124,17 +126,17 @@ public class DataInitializer implements CommandLineRunner {
                         return null;
                 });
 
-                userRepository.findByEmail(email).ifPresentOrElse(
-                                user -> System.out.println("Admin user already exists."),
-                                () -> {
-                                        User user = new User();
-                                        user.setUsername("admin");
-                                        user.setEmail(email);
-                                        user.setPassword(passwordEncoder.encode("admin123"));
-                                        user.setRole(User.Role.ADMIN);
-                                        userRepository.save(user);
-                                        System.out.println("Created admin user: " + email);
-                                });
+                return userRepository.findByEmail(email).orElseGet(() -> {
+                        User user = new User();
+                        user.setUsername("admin");
+                        user.setEmail(email);
+                        user.setPassword(passwordEncoder.encode("admin123"));
+                        user.setRole(User.Role.ADMIN);
+                        user.setAvatarUrl("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80");
+                        User saved = userRepository.save(user);
+                        System.out.println("Created admin user: " + email);
+                        return saved;
+                });
         }
 
         private User createFarmerIfNotExists() {
@@ -155,60 +157,93 @@ public class DataInitializer implements CommandLineRunner {
                         user.setEmail(email);
                         user.setPassword(passwordEncoder.encode("password123"));
                         user.setRole(User.Role.FARMER);
+                        user.setAvatarUrl("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80");
                         return userRepository.saveAndFlush(user);
                 });
         }
 
         private List<Farm> createSampleFarms(User owner) {
                 Farm farm1 = createFarm(owner, "緑の里オーガニック農園",
-                                "無農薬・有機栽培にこだわった野菜作りを体験できます。", "埼玉県秩父市",
-                                "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&q=80");
+                                "無農薬・有機栽培にこだわった野菜作りを体験できます。都心から車で90分、豊かな自然に囲まれたプライベート空間。", "埼玉県秩父市",
+                                "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&q=80",
+                                                "https://images.unsplash.com/photo-1625246333195-bfk76378e3?w=800&q=80",
+                                                "https://images.unsplash.com/photo-1595855709940-577268785a7d?w=800&q=80",
+                                                "https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=800&q=80",
+                                                "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=800&q=80"),
+                                List.of("無料駐車場", "手袋貸出", "トイレ", "休憩所", "BBQエリア", "収穫体験ガイド"));
 
                 Farm farm2 = createFarm(owner, "さくらんぼの丘ファーム",
-                                "山形県産の甘くて美味しいさくらんぼを自分で収穫できます。", "山形県天童市",
-                                "https://images.unsplash.com/photo-1528821128474-27f963b062bf?w=800&q=80");
+                                "山形県産の甘くて美味しいさくらんぼを自分で収穫できます。お子様連れでも安心の平坦な農園です。", "山形県天童市",
+                                "https://images.unsplash.com/photo-1528821128474-27f963b062bf?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1528821128474-27f963b062bf?w=800&q=80",
+                                                "https://images.unsplash.com/photo-1587049352846-4a222e784538?w=800&q=80",
+                                                "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=800&q=80",
+                                                "https://images.unsplash.com/photo-1597430292881-897b2d56b093?w=800&q=80",
+                                                "https://images.unsplash.com/photo-1621459439632-15f1874252d6?w=800&q=80"),
+                                List.of("雨天対応ハウス", "駐車場あり", "トイレ", "直売所", "カフェ併設", "ペット同伴可"));
 
+                // Other farms with simpler data for brevity but valid arguments
                 Farm farm3 = createFarm(owner, "ひまわり牧場",
                                 "北海道の大自然の中で、乳搾りやバター作り体験ができます。", "北海道富良野市",
-                                "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&q=80");
+                                "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&q=80"),
+                                List.of("駐車場", "体験教室"));
 
                 Farm farm4 = createFarm(owner, "棚田の風景農園",
                                 "美しい棚田で田植えや稲刈り体験ができます。", "新潟県十日町市",
-                                "https://images.unsplash.com/photo-1559884743-74a57598c6c7?w=800&q=80");
+                                "https://images.unsplash.com/photo-1559884743-74a57598c6c7?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1559884743-74a57598c6c7?w=800&q=80"),
+                                List.of("絶景", "長靴貸出"));
 
                 Farm farm5 = createFarm(owner, "ぶどうの丘ワイナリー",
                                 "ワイン用ぶどうの収穫体験とワイナリー見学ができます。", "山梨県甲州市",
-                                "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&q=80");
+                                "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&q=80"),
+                                List.of("試飲あり", "レストラン"));
 
                 Farm farm6 = createFarm(owner, "富士茶園",
                                 "富士山の麓で育つ高品質なお茶葉。お茶摘み体験ができます。", "静岡県富士市",
-                                "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80");
+                                "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80"),
+                                List.of("お茶セット付き", "富士山眺望"));
 
                 Farm farm7 = createFarm(owner, "京野菜ファーム",
                                 "京都の伝統野菜を育てる農園。京野菜ならではの味わいを楽しめます。", "京都府亀岡市",
-                                "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80");
+                                "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80"),
+                                List.of("料理教室", "送迎あり"));
 
                 Farm farm8 = createFarm(owner, "陽だまりのブルーベリー農園",
                                 "岡山県が誇る白桃とマスカットの農園。高級フルーツを収穫できます。", "岡山県岡山市",
-                                "https://images.unsplash.com/photo-1595855709940-577268785a7d?w=800&q=80");
+                                "https://images.unsplash.com/photo-1595855709940-577268785a7d?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1595855709940-577268785a7d?w=800&q=80"),
+                                List.of("食べ放題", "カフェ"));
 
                 Farm farm9 = createFarm(owner, "あまおう農園",
                                 "福岡県の特産品あまおういちごを栽培する農園。食べ放題で楽しめます。", "福岡県久留米市",
-                                "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=800&q=80");
+                                "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=800&q=80"),
+                                List.of("バリアフリー", "ベビーカー可"));
 
                 Farm farm10 = createFarm(owner, "南国トロピカル農園",
                                 "沖縄の太陽をたっぷり浴びたパイナップルやマンゴーを収穫できます。", "沖縄県名護市",
-                                "https://images.unsplash.com/photo-1587049352846-4a222e784538?w=800&q=80");
+                                "https://images.unsplash.com/photo-1587049352846-4a222e784538?w=800&q=80",
+                                List.of("https://images.unsplash.com/photo-1587049352846-4a222e784538?w=800&q=80"),
+                                List.of("スムージー販売", "沖縄体験"));
 
                 return List.of(farm1, farm2, farm3, farm4, farm5, farm6, farm7, farm8, farm9, farm10);
         }
 
-        private Farm createFarm(User owner, String name, String description, String location, String imageUrl) {
+        private Farm createFarm(User owner, String name, String description, String location, String imageUrl,
+                        List<String> images, List<String> features) {
                 Farm farm = new Farm();
                 farm.setName(name);
                 farm.setDescription(description);
                 farm.setLocation(location);
                 farm.setImageUrl(imageUrl);
+                farm.setImages(images);
+                farm.setFeatures(features);
                 farm.setOwner(owner);
                 return farmRepository.save(farm);
         }

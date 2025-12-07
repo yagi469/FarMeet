@@ -28,6 +28,21 @@ public class SimpleMigration {
             jdbcTemplate.execute(
                     "ALTER TABLE experience_events ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false NOT NULL");
 
+            // Users avatar
+            jdbcTemplate.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(255)");
+
+            // Farm images table
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS farm_images (" +
+                    "farm_id BIGINT NOT NULL, " +
+                    "image_url VARCHAR(255), " +
+                    "FOREIGN KEY (farm_id) REFERENCES farms(id))");
+
+            // Farm features table
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS farm_features (" +
+                    "farm_id BIGINT NOT NULL, " +
+                    "feature VARCHAR(255), " +
+                    "FOREIGN KEY (farm_id) REFERENCES farms(id))");
+
             System.out.println("Schema migration completed successfully.");
         } catch (Exception e) {
             System.err.println("Migration warning (might be already applied or permission issue): " + e.getMessage());

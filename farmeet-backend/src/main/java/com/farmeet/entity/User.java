@@ -41,6 +41,9 @@ public class User implements UserDetails {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     private boolean deleted = false;
 
     @PrePersist
