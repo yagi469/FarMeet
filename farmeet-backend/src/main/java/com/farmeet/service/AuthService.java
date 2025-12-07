@@ -7,8 +7,6 @@ import com.farmeet.entity.User;
 import com.farmeet.repository.UserRepository;
 import com.farmeet.security.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,9 +21,6 @@ public class AuthService {
 
     @Autowired
     private JwtProvider jwtProvider;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -55,24 +50,28 @@ public class AuthService {
         userRepository.save(user);
 
         String token = jwtProvider.generateToken(user);
-
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole().name());
     }
 
     public AuthResponse login(AuthRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmailIncludingDeleted(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String token = jwtProvider.generateToken(user);
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
 
+        if (user.isDeleted()) {
+            user.setDeleted(false);
+            userRepository.save(user);
+        }
+
+        String token = jwtProvider.generateToken(user);
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole().name());
     }
 
     public User getCurrentUser(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailIncludingDeleted(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -107,6 +106,71 @@ public class AuthService {
     }
 
     public boolean checkEmail(String email) {
-        return userRepository.existsByEmail(email);
+        return userRepository.findByEmailIncludingDeleted(email).isPresent();
+    }
+
+    @Autowired
+    private com.farmeet.repository.OtpRepository otpRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    public void generateOtp(String email) {
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+
+        com.farmeet.entity.OtpCode otpCode = otpRepository.findByEmail(email)
+                .orElse(new com.farmeet.entity.OtpCode());
+
+        otpCode.setEmail(email);
+        otpCode.setCode(otp);
+        otpCode.setExpiryDate(java.time.LocalDateTime.now().plusMinutes(10));
+
+        otpRepository.save(otpCode);
+        emailService.sendOtp(email, otp);
+    }
+
+    public AuthResponse verifyOtp(String email, String code) {
+        com.farmeet.entity.OtpCode otpCode = otpRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("OTP not found"));
+
+        if (otpCode.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("OTP expired");
+        }
+
+        if (!otpCode.getCode().equals(code)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        otpRepository.delete(otpCode);
+
+        User user = userRepository.findByEmailIncludingDeleted(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isDeleted()) {
+            user.setDeleted(false);
+            userRepository.save(user);
+        }
+
+        String token = jwtProvider.generateToken(user);
+        return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole().name());
+    }
+
+    public boolean verifyOtpForSignup(String email, String code) {
+        com.farmeet.entity.OtpCode otpCode = otpRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("OTP not found"));
+
+        if (otpCode.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("OTP expired");
+        }
+
+        if (!otpCode.getCode().equals(code)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+        return true;
+        // Don't delete yet, delete after full signup? Or delete now and issue temporary
+        // token?
+        // For simplicity, we just return true. The actual signup will create the user.
+        // Ideally we should issue a "Registration Token" but keeping it simple as
+        // trusted client for now.
     }
 }

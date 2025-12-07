@@ -44,12 +44,31 @@ class ApiClient {
         return response.json();
     }
 
-    async checkEmail(email: string): Promise<boolean> {
+    async checkEmail(email: string): Promise<{ exists: boolean; isAdmin: boolean }> {
         const response = await fetch(`${API_BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
         });
         if (!response.ok) throw new Error('Email check failed');
+        return response.json();
+    }
+
+    async sendOtp(email: string) {
+        const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        if (!response.ok) throw new Error('Failed to send OTP');
+    }
+
+    async verifyOtp(email: string, code: string, isSignup = false): Promise<{ token?: string; valid?: boolean }> {
+        const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code, isSignup: String(isSignup) }),
+        });
+        if (!response.ok) throw new Error('Invalid code');
         return response.json();
     }
 

@@ -54,7 +54,35 @@ public class AuthController {
     }
 
     @GetMapping("/check-email")
-    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
-        return ResponseEntity.ok(authService.checkEmail(email));
+    public ResponseEntity<java.util.Map<String, Object>> checkEmail(@RequestParam String email) {
+        boolean exists = authService.checkEmail(email);
+        boolean isAdmin = false;
+        if (exists) {
+            User user = authService.getCurrentUser(email);
+            isAdmin = user.getRole() == User.Role.ADMIN;
+        }
+        return ResponseEntity.ok(java.util.Map.of("exists", exists, "isAdmin", isAdmin));
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<Void> sendOtp(@RequestBody java.util.Map<String, String> payload) {
+        authService.generateOtp(payload.get("email"));
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody java.util.Map<String, String> payload) {
+        try {
+            boolean isSignup = Boolean.parseBoolean(payload.getOrDefault("isSignup", "false"));
+            if (isSignup) {
+                boolean valid = authService.verifyOtpForSignup(payload.get("email"), payload.get("code"));
+                return ResponseEntity.ok(java.util.Map.of("valid", valid));
+            } else {
+                AuthResponse response = authService.verifyOtp(payload.get("email"), payload.get("code"));
+                return ResponseEntity.ok(response);
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
     }
 }

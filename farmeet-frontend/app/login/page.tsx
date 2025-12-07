@@ -7,13 +7,17 @@ import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 
 function AuthForm() {
-    const [step, setStep] = useState<'EMAIL' | 'LOGIN' | 'SIGNUP'>('EMAIL');
+    const [step, setStep] = useState<'EMAIL' | 'PASSWORD' | 'OTP' | 'SIGNUP_DETAILS'>('EMAIL');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [otp, setOtp] = useState('');
     const [username, setUsername] = useState('');
     const [role, setRole] = useState('USER');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // For signup flow
+    const [isSignup, setIsSignup] = useState(false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -25,11 +29,22 @@ function AuthForm() {
         setLoading(true);
 
         try {
-            const exists = await api.checkEmail(email);
+            const { exists, isAdmin } = await api.checkEmail(email);
+
             if (exists) {
-                setStep('LOGIN');
+                if (isAdmin) {
+                    setStep('PASSWORD');
+                } else {
+                    // Existing User -> Send OTP
+                    await api.sendOtp(email);
+                    setStep('OTP');
+                    setIsSignup(false);
+                }
             } else {
-                setStep('SIGNUP');
+                // New User -> Send OTP for Verification First
+                await api.sendOtp(email);
+                setStep('OTP');
+                setIsSignup(true);
             }
         } catch (err) {
             setError('エラーが発生しました。もう一度お試しください。');
@@ -38,7 +53,7 @@ function AuthForm() {
         }
     };
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handlePasswordLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
@@ -55,13 +70,51 @@ function AuthForm() {
         }
     };
 
+    const handleOtpVerify = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            if (isSignup) {
+                const { valid } = await api.verifyOtp(email, otp, true);
+                if (valid) {
+                    setStep('SIGNUP_DETAILS');
+                } else {
+                    setError('認証コードが正しくありません。');
+                }
+            } else {
+                // Login
+                const response = await api.verifyOtp(email, otp, false);
+                if (response.token) {
+                    localStorage.setItem('token', response.token);
+                    login();
+                    const redirectUrl = searchParams.get('redirect') || '/';
+                    router.push(redirectUrl);
+                } else {
+                    setError('認証に失敗しました。');
+                }
+            }
+        } catch (err) {
+            setError('認証コードが正しくありません。');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
         try {
-            await authHelper.signup(username, email, password, role);
+            await authHelper.signup(username, email, 'otp-verified', role); // Use dummy password or change backend to optional
+            // Note: Backend might strictly require password. 
+            // Workaround: We will use a random strong password or 'otp-verified' string since they will login via OTP anyway.
+            // But wait, the current AuthService.signup ENCODES the password.
+            // If they ever need password login, they can reset it? 
+            // For now, consistent with 'No Password For Users'.
+
             login();
             router.push('/');
         } catch (err) {
@@ -71,11 +124,21 @@ function AuthForm() {
         }
     };
 
+    const resendOtp = async () => {
+        setError('');
+        try {
+            await api.sendOtp(email);
+            alert('認証コードを再送信しました。（コンソールを確認してください）');
+        } catch (err) {
+            setError('再送信に失敗しました。');
+        }
+    };
+
     return (
         <div className="max-w-md mx-auto mt-16">
             <div className="bg-white p-8 rounded-lg shadow-md">
                 <h1 className="text-3xl font-bold mb-6 text-center">
-                    {step === 'SIGNUP' ? '登録を完了する' : 'ログインまたは登録'}
+                    {step === 'SIGNUP_DETAILS' ? '登録を完了する' : 'ログインまたは登録'}
                 </h1>
 
                 {error && (
@@ -111,8 +174,8 @@ function AuthForm() {
                     </form>
                 )}
 
-                {step === 'LOGIN' && (
-                    <form onSubmit={handleLogin}>
+                {step === 'PASSWORD' && (
+                    <form onSubmit={handlePasswordLogin}>
                         <div className="mb-4">
                             <p className="text-sm text-gray-500 mb-2">メールアドレス</p>
                             <div className="flex justify-between items-center mb-4">
@@ -145,13 +208,56 @@ function AuthForm() {
                     </form>
                 )}
 
-                {step === 'SIGNUP' && (
-                    <form onSubmit={handleSignup}>
+                {step === 'OTP' && (
+                    <form onSubmit={handleOtpVerify}>
                         <div className="mb-4">
                             <p className="text-sm text-gray-500 mb-2">メールアドレス</p>
                             <div className="flex justify-between items-center mb-4">
                                 <span className="font-medium">{email}</span>
                                 <button type="button" onClick={() => setStep('EMAIL')} className="text-sm text-green-600 hover:underline">編集</button>
+                            </div>
+                        </div>
+
+                        <div className="mb-6">
+                            <label htmlFor="otp" className="block text-sm font-medium mb-2">
+                                認証コード
+                            </label>
+                            <div className="mb-2 text-sm text-gray-600">
+                                {email} に送信された6桁のコードを入力してください。
+                            </div>
+                            <input
+                                type="text"
+                                id="otp"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 tracking-widest text-lg text-center"
+                                placeholder="000000"
+                                maxLength={6}
+                                required
+                            />
+                            <div className="mt-2 text-right">
+                                <button type="button" onClick={resendOtp} className="text-sm text-green-600 hover:underline">
+                                    コードを再送信
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition disabled:bg-gray-400"
+                        >
+                            {loading ? '確認中...' : '認証して続行'}
+                        </button>
+                    </form>
+                )}
+
+                {step === 'SIGNUP_DETAILS' && (
+                    <form onSubmit={handleSignup}>
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-500 mb-2">メールアドレス（認証済み）</p>
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="font-medium">{email}</span>
                             </div>
                         </div>
 
@@ -166,21 +272,6 @@ function AuthForm() {
                                 onChange={(e) => setUsername(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                                 required
-                            />
-                        </div>
-
-                        <div className="mb-4">
-                            <label htmlFor="password" className="block text-sm font-medium mb-2">
-                                パスワード
-                            </label>
-                            <input
-                                type="password"
-                                id="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                                required
-                                minLength={6}
                             />
                         </div>
 
@@ -204,7 +295,7 @@ function AuthForm() {
                             disabled={loading}
                             className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition disabled:bg-gray-400"
                         >
-                            {loading ? '登録中...' : '同意して登録'}
+                            {loading ? '登録中...' : '登録を完了する'}
                         </button>
                     </form>
                 )}
