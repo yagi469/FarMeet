@@ -463,6 +463,14 @@ class ApiClient {
         if (!response.ok) throw new Error('Failed to restore event');
     }
 
+    async adminGetStats() {
+        const response = await fetch(`${API_BASE_URL}/admin/stats`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch stats');
+        return response.json();
+    }
+
     removeToken() {
         removeToken();
     }
