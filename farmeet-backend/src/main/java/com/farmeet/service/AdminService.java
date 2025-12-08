@@ -324,16 +324,17 @@ public class AdminService {
      * Permanently delete a user and all related data from the database.
      * This action cannot be undone.
      */
+    @SuppressWarnings("unchecked")
     public void hardDeleteUser(Long id) {
         // First, hard delete all farms owned by this user (which will cascade to
         // events)
-        List<Object[]> farmIds = entityManager
+        List<Object> farmIds = entityManager
                 .createNativeQuery("SELECT id FROM farms WHERE owner_id = :userId")
                 .setParameter("userId", id)
                 .getResultList();
 
-        for (Object[] row : farmIds) {
-            Long farmId = ((Number) row[0]).longValue();
+        for (Object row : farmIds) {
+            Long farmId = ((Number) row).longValue();
             hardDeleteFarm(farmId);
         }
 
