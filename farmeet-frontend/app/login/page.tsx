@@ -79,7 +79,8 @@ function AuthForm() {
         setLoading(true);
 
         try {
-            await api.login({ email, password });
+            const response = await api.login({ email, password });
+            localStorage.setItem('token', response.token);
             login();
             const redirectUrl = searchParams.get('redirect') || '/';
             router.push(redirectUrl);
@@ -317,6 +318,11 @@ function AuthForm() {
                             <div className="mb-2 text-sm text-gray-600">
                                 {loginMethod === 'EMAIL' ? email : phoneNumber} に送信された6桁のコードを入力してください。
                             </div>
+                            {loginMethod === 'EMAIL' && (
+                                <div className="mb-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
+                                    ⚠️ メールが届かない場合は、迷惑メールフォルダをご確認ください。
+                                </div>
+                            )}
                             <input
                                 type="text"
                                 id="otp"

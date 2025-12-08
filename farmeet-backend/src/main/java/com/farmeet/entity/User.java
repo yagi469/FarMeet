@@ -35,6 +35,7 @@ public class User implements UserDetails {
     private String phoneNumber;
 
     @Column(nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -47,6 +48,7 @@ public class User implements UserDetails {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private boolean deleted = false;
 
     @PrePersist
@@ -56,26 +58,31 @@ public class User implements UserDetails {
 
     // UserDetails implementation
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isEnabled() {
         return !deleted;
     }
