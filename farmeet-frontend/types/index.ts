@@ -5,6 +5,7 @@ export interface User {
     email: string;
     role: 'USER' | 'FARMER' | 'ADMIN';
     avatarUrl?: string;
+    phoneNumber?: string;
 }
 
 export interface Farm {
@@ -53,6 +54,8 @@ export interface SignupRequest {
     email: string;
     password: string;
     role?: string;
+    phoneNumber?: string;
+    phoneOtp?: string;
 }
 
 export interface AuthRequest {
@@ -63,4 +66,9 @@ export interface AuthRequest {
 export interface ReservationRequest {
     eventId: number;
     numberOfPeople: number;
+}
+
+export interface PhoneVerificationResponse {
+    token: string | null;
+    registered: boolean;
 }

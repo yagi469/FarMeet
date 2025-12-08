@@ -14,7 +14,7 @@ export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
-    const [editForm, setEditForm] = useState({ username: '', email: '', role: '' as 'USER' | 'FARMER' | 'ADMIN' });
+    const [editForm, setEditForm] = useState({ username: '', email: '', role: '' as 'USER' | 'FARMER' | 'ADMIN', phoneNumber: '' });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -31,7 +31,7 @@ export default function ProfilePage() {
         try {
             const data = await api.getProfile();
             setUser(data);
-            setEditForm({ username: data.username, email: data.email, role: data.role });
+            setEditForm({ username: data.username, email: data.email, role: data.role, phoneNumber: data.phoneNumber || '' });
         } catch (error) {
             console.error('プロファイル読み込みエラー:', error);
         } finally {
@@ -48,7 +48,7 @@ export default function ProfilePage() {
     const handleCancel = () => {
         setIsEditing(false);
         if (user) {
-            setEditForm({ username: user.username, email: user.email, role: user.role });
+            setEditForm({ username: user.username, email: user.email, role: user.role, phoneNumber: user.phoneNumber || '' });
         }
         setError('');
     };
@@ -142,6 +142,23 @@ export default function ProfilePage() {
                             />
                         ) : (
                             <p className="text-lg font-semibold">{user.email}</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-500 mb-1">
+                            電話番号
+                        </label>
+                        {isEditing ? (
+                            <input
+                                type="tel"
+                                value={editForm.phoneNumber}
+                                onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                                placeholder="09012345678"
+                            />
+                        ) : (
+                            <p className="text-lg font-semibold">{user.phoneNumber || '未設定'}</p>
                         )}
                     </div>
 

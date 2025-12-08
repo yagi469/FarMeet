@@ -37,7 +37,6 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/profile")
     public ResponseEntity<User> getProfile(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(user);
     }
@@ -81,6 +80,23 @@ public class AuthController {
                 AuthResponse response = authService.verifyOtp(payload.get("email"), payload.get("code"));
                 return ResponseEntity.ok(response);
             }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/phone/send-otp")
+    public ResponseEntity<Void> sendPhoneOtp(@RequestBody java.util.Map<String, String> payload) {
+        authService.generatePhoneOtp(payload.get("phoneNumber"));
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/phone/login")
+    public ResponseEntity<?> loginPhone(@RequestBody java.util.Map<String, String> payload) {
+        try {
+            com.farmeet.dto.PhoneVerificationResponse response = authService.verifyPhoneOtp(payload.get("phoneNumber"),
+                    payload.get("code"));
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         }

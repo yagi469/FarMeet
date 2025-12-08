@@ -7,14 +7,19 @@ import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 
 function AuthForm() {
-    const [step, setStep] = useState<'EMAIL' | 'PASSWORD' | 'OTP' | 'SIGNUP_DETAILS'>('EMAIL');
+    const [loginMethod, setLoginMethod] = useState<'EMAIL' | 'PHONE'>('EMAIL');
+    const [step, setStep] = useState<'INPUT' | 'OTP' | 'SIGNUP_DETAILS'>('INPUT');
     const [email, setEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [password, setPassword] = useState('');
     const [otp, setOtp] = useState('');
     const [username, setUsername] = useState('');
     const [role, setRole] = useState('USER');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // For password login flow check
+    const [isPasswordLogin, setIsPasswordLogin] = useState(false);
 
     // For signup flow
     const [isSignup, setIsSignup] = useState(false);
@@ -33,7 +38,7 @@ function AuthForm() {
 
             if (exists) {
                 if (isAdmin) {
-                    setStep('PASSWORD');
+                    setIsPasswordLogin(true);
                 } else {
                     // Existing User -> Send OTP
                     await api.sendOtp(email);
@@ -53,13 +58,28 @@ function AuthForm() {
         }
     };
 
+    const handlePhoneSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            await api.sendPhoneOtp(phoneNumber);
+            setStep('OTP');
+        } catch (err) {
+            setError('SMSの送信に失敗しました。電話番号を確認してください。');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handlePasswordLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
         try {
-            await authHelper.login(email, password);
+            await api.login({ email, password });
             login();
             const redirectUrl = searchParams.get('redirect') || '/';
             router.push(redirectUrl);
@@ -76,21 +96,39 @@ function AuthForm() {
         setLoading(true);
 
         try {
-            if (isSignup) {
-                const { valid } = await api.verifyOtp(email, otp, true);
-                if (valid) {
-                    setStep('SIGNUP_DETAILS');
+            if (loginMethod === 'EMAIL') {
+                if (isSignup) {
+                    const result = await api.verifyOtp(email, otp, true);
+                    if ('valid' in result && result.valid) {
+                        setStep('SIGNUP_DETAILS');
+                    } else {
+                        setError('認証コードが正しくありません。');
+                    }
                 } else {
-                    setError('認証コードが正しくありません。');
+                    // Login
+                    const response = await api.verifyOtp(email, otp, false);
+                    if ('token' in response && response.token) {
+                        localStorage.setItem('token', response.token);
+                        login();
+                        const redirectUrl = searchParams.get('redirect') || '/';
+                        router.push(redirectUrl);
+                    } else {
+                        setError('認証に失敗しました。');
+                    }
                 }
             } else {
-                // Login
-                const response = await api.verifyOtp(email, otp, false);
-                if (response.token) {
+                // Phone Login
+                const response = await api.loginPhone(phoneNumber, otp);
+                if (response.registered && response.token) {
+                    // Registered User -> Login
                     localStorage.setItem('token', response.token);
                     login();
                     const redirectUrl = searchParams.get('redirect') || '/';
                     router.push(redirectUrl);
+                } else if (!response.registered) {
+                    // Unregistered User -> Signup
+                    setIsSignup(true);
+                    setStep('SIGNUP_DETAILS');
                 } else {
                     setError('認証に失敗しました。');
                 }
@@ -101,20 +139,20 @@ function AuthForm() {
             setLoading(false);
         }
     };
-
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
         try {
-            await authHelper.signup(username, email, 'otp-verified', role); // Use dummy password or change backend to optional
-            // Note: Backend might strictly require password. 
-            // Workaround: We will use a random strong password or 'otp-verified' string since they will login via OTP anyway.
-            // But wait, the current AuthService.signup ENCODES the password.
-            // If they ever need password login, they can reset it? 
-            // For now, consistent with 'No Password For Users'.
-
+            await api.signup({
+                username,
+                email: email,
+                password: 'otp-verified',
+                role,
+                phoneNumber: loginMethod === 'PHONE' ? phoneNumber : undefined,
+                phoneOtp: loginMethod === 'PHONE' ? otp : undefined
+            });
             login();
             router.push('/');
         } catch (err) {
@@ -127,7 +165,11 @@ function AuthForm() {
     const resendOtp = async () => {
         setError('');
         try {
-            await api.sendOtp(email);
+            if (loginMethod === 'EMAIL') {
+                await api.sendOtp(email);
+            } else {
+                await api.sendPhoneOtp(phoneNumber);
+            }
             alert('認証コードを再送信しました。（コンソールを確認してください）');
         } catch (err) {
             setError('再送信に失敗しました。');
@@ -147,40 +189,87 @@ function AuthForm() {
                     </div>
                 )}
 
-                {step === 'EMAIL' && (
-                    <form onSubmit={handleEmailSubmit}>
-                        <div className="mb-6">
-                            <h2 className="text-xl mb-4">FarMeetへようこそ</h2>
-                            <label htmlFor="email" className="block text-sm font-medium mb-2">
-                                メールアドレス
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                                placeholder="example@email.com"
-                                required
-                            />
+                {step === 'INPUT' && !isPasswordLogin && (
+                    <>
+                        <div className="flex mb-6 border-b">
+                            <button
+                                className={`flex-1 py-2 text-center ${loginMethod === 'EMAIL' ? 'border-b-2 border-green-600 text-green-600 font-bold' : 'text-gray-500'}`}
+                                onClick={() => setLoginMethod('EMAIL')}
+                            >
+                                メール
+                            </button>
+                            <button
+                                className={`flex-1 py-2 text-center ${loginMethod === 'PHONE' ? 'border-b-2 border-green-600 text-green-600 font-bold' : 'text-gray-500'}`}
+                                onClick={() => setLoginMethod('PHONE')}
+                            >
+                                電話番号
+                            </button>
                         </div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition disabled:bg-gray-400"
-                        >
-                            {loading ? '確認中...' : '続行'}
-                        </button>
-                    </form>
+
+                        {loginMethod === 'EMAIL' ? (
+                            <form onSubmit={handleEmailSubmit}>
+                                <div className="mb-6">
+                                    <h2 className="text-xl mb-4">FarMeetへようこそ</h2>
+                                    <label htmlFor="email" className="block text-sm font-medium mb-2">
+                                        メールアドレス
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        placeholder="example@email.com"
+                                        required
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition disabled:bg-gray-400"
+                                >
+                                    {loading ? '確認中...' : '続行'}
+                                </button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handlePhoneSubmit}>
+                                <div className="mb-6">
+                                    <h2 className="text-xl mb-4">電話番号でログイン</h2>
+                                    <label htmlFor="phone" className="block text-sm font-medium mb-2">
+                                        電話番号
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        id="phone"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        placeholder="09012345678"
+                                        required
+                                    />
+                                    <p className="text-sm text-gray-500 mt-2">
+                                        ※現在は既存ユーザーのログインのみ対応しています。
+                                    </p>
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition disabled:bg-gray-400"
+                                >
+                                    {loading ? 'コードを送信' : '続行'}
+                                </button>
+                            </form>
+                        )}
+                    </>
                 )}
 
-                {step === 'PASSWORD' && (
+                {isPasswordLogin && (
                     <form onSubmit={handlePasswordLogin}>
                         <div className="mb-4">
                             <p className="text-sm text-gray-500 mb-2">メールアドレス</p>
                             <div className="flex justify-between items-center mb-4">
                                 <span className="font-medium">{email}</span>
-                                <button type="button" onClick={() => setStep('EMAIL')} className="text-sm text-green-600 hover:underline">編集</button>
+                                <button type="button" onClick={() => setIsPasswordLogin(false)} className="text-sm text-green-600 hover:underline">編集</button>
                             </div>
                         </div>
 
@@ -205,16 +294,19 @@ function AuthForm() {
                         >
                             {loading ? 'ログイン中...' : 'ログイン'}
                         </button>
+                        <button type="button" onClick={() => setIsPasswordLogin(false)} className="block w-full text-center mt-4 text-sm text-gray-600 hover:text-gray-800">
+                            戻る
+                        </button>
                     </form>
                 )}
 
                 {step === 'OTP' && (
                     <form onSubmit={handleOtpVerify}>
                         <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-2">メールアドレス</p>
+                            <p className="text-sm text-gray-500 mb-2">{loginMethod === 'EMAIL' ? 'メールアドレス' : '電話番号'}</p>
                             <div className="flex justify-between items-center mb-4">
-                                <span className="font-medium">{email}</span>
-                                <button type="button" onClick={() => setStep('EMAIL')} className="text-sm text-green-600 hover:underline">編集</button>
+                                <span className="font-medium">{loginMethod === 'EMAIL' ? email : phoneNumber}</span>
+                                <button type="button" onClick={() => setStep('INPUT')} className="text-sm text-green-600 hover:underline">編集</button>
                             </div>
                         </div>
 
@@ -223,7 +315,7 @@ function AuthForm() {
                                 認証コード
                             </label>
                             <div className="mb-2 text-sm text-gray-600">
-                                {email} に送信された6桁のコードを入力してください。
+                                {loginMethod === 'EMAIL' ? email : phoneNumber} に送信された6桁のコードを入力してください。
                             </div>
                             <input
                                 type="text"
@@ -255,11 +347,28 @@ function AuthForm() {
                 {step === 'SIGNUP_DETAILS' && (
                     <form onSubmit={handleSignup}>
                         <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-2">メールアドレス（認証済み）</p>
+                            <p className="text-sm text-gray-500 mb-2">{loginMethod === 'EMAIL' ? 'メールアドレス（認証済み）' : '電話番号（認証済み）'}</p>
                             <div className="flex justify-between items-center mb-4">
-                                <span className="font-medium">{email}</span>
+                                <span className="font-medium">{loginMethod === 'EMAIL' ? email : phoneNumber}</span>
                             </div>
                         </div>
+
+                        {loginMethod === 'PHONE' && (
+                            <div className="mb-4">
+                                <label htmlFor="signup-email" className="block text-sm font-medium mb-2">
+                                    メールアドレス
+                                </label>
+                                <input
+                                    type="email"
+                                    id="signup-email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    required
+                                    placeholder="example@email.com"
+                                />
+                            </div>
+                        )}
 
                         <div className="mb-4">
                             <label htmlFor="username" className="block text-sm font-medium mb-2">

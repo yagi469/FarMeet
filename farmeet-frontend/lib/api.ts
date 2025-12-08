@@ -1,3 +1,5 @@
+import { AuthRequest, AuthResponse, PhoneVerificationResponse, SignupRequest } from "../types";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 // トークンの取得
@@ -34,13 +36,26 @@ const getAuthHeaders = (): HeadersInit => {
 // APIクライアント
 class ApiClient {
     // 認証
-    async signup(data: { username: string; email: string; password: string; role?: string }) {
+    async signup(data: SignupRequest) {
         const response = await fetch(`${API_BASE_URL}/auth/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
         if (!response.ok) throw new Error('Signup failed');
+        return response.json();
+    }
+
+    async login(data: AuthRequest): Promise<AuthResponse> {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'ログインに失敗しました');
+        }
         return response.json();
     }
 
@@ -62,23 +77,40 @@ class ApiClient {
         if (!response.ok) throw new Error('Failed to send OTP');
     }
 
-    async verifyOtp(email: string, code: string, isSignup = false): Promise<{ token?: string; valid?: boolean }> {
+    async verifyOtp(email: string, code: string, isSignup: boolean = false): Promise<AuthResponse | { valid: boolean }> {
         const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, code, isSignup: String(isSignup) }),
+            body: JSON.stringify({ email, code, isSignup: isSignup.toString() }),
         });
-        if (!response.ok) throw new Error('Invalid code');
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Failed to verify OTP');
+        }
         return response.json();
     }
 
-    async login(email: string, password: string) {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    async sendPhoneOtp(phoneNumber: string) {
+        const response = await fetch(`${API_BASE_URL}/auth/phone/send-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ phoneNumber }),
         });
-        if (!response.ok) throw new Error('Login failed');
+        if (!response.ok) throw new Error('Failed to send OTP');
+    }
+
+    async loginPhone(phoneNumber: string, code: string): Promise<PhoneVerificationResponse> {
+        const response = await fetch(`${API_BASE_URL}/auth/phone/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phoneNumber, code }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'ログインに失敗しました');
+        }
+
         return response.json();
     }
 
@@ -90,7 +122,7 @@ class ApiClient {
         return response.json();
     }
 
-    async updateProfile(data: { username?: string; email?: string; role?: string }) {
+    async updateProfile(data: { username?: string; email?: string; role?: string; phoneNumber?: string }) {
         const response = await fetch(`${API_BASE_URL}/auth/profile`, {
             method: 'PUT',
             headers: getAuthHeaders(),
@@ -308,24 +340,6 @@ class ApiClient {
             headers: getAuthHeaders(),
         });
         if (!response.ok) throw new Error('Failed to delete farm');
-    }
-
-    async adminGetStats() {
-        const response = await fetch(`${API_BASE_URL}/admin/stats`, {
-            headers: getAuthHeaders(),
-        });
-        if (!response.ok) throw new Error('Failed to get stats');
-        return response.json();
-    }
-
-    async adminCreateUser(data: { username: string; email: string; password: string; role: string }) {
-        const response = await fetch(`${API_BASE_URL}/admin/users`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(data),
-        });
-        if (!response.ok) throw new Error('Failed to create user');
-        return response.json();
     }
 
     async adminUpdateUser(id: number, data: { username: string; email: string; role: string }) {

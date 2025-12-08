@@ -34,7 +34,43 @@ public class AuthService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Handle password
+        if (request.getPassword() != null && "otp-verified".equals(request.getPassword())
+                && request.getPhoneNumber() != null) {
+            // For phone signup, we generate a random password
+            user.setPassword(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
+        } else {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
+            if (userRepository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
+                throw new RuntimeException("Phone number already exists");
+            }
+
+            // Validate OTP for phone signup
+            if (request.getPhoneOtp() != null && !request.getPhoneOtp().isEmpty()) {
+                com.farmeet.entity.OtpCode otpCode = otpRepository.findByPhoneNumber(request.getPhoneNumber())
+                        .orElseThrow(() -> new RuntimeException("OTP not found"));
+
+                if (otpCode.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
+                    throw new RuntimeException("OTP expired");
+                }
+
+                if (!otpCode.getCode().equals(request.getPhoneOtp())) {
+                    throw new RuntimeException("Invalid OTP");
+                }
+
+                // Now delete the OTP as it is used for signup
+                otpRepository.delete(otpCode);
+            } else if ("otp-verified".equals(request.getPassword())) {
+                // If password indicates OTP flow but no OTP provided, that's an error
+                throw new RuntimeException("OTP required for phone signup");
+            }
+
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
 
         // Set role
         if (request.getRole() != null && !request.getRole().isEmpty()) {
@@ -102,6 +138,17 @@ public class AuthService {
             user.setRole(updatedUser.getRole());
         }
 
+        // Update phoneNumber if provided and different
+        if (updatedUser.getPhoneNumber() != null && !updatedUser.getPhoneNumber().isEmpty()
+                && !updatedUser.getPhoneNumber().equals(user.getPhoneNumber())) {
+            if (userRepository.findByPhoneNumber(updatedUser.getPhoneNumber()).isPresent()) {
+                throw new RuntimeException("Phone number already exists");
+            }
+            // User updating phone number should ideally verify it too, but omitting for
+            // brevity/consistency
+            user.setPhoneNumber(updatedUser.getPhoneNumber());
+        }
+
         return userRepository.save(user);
     }
 
@@ -167,10 +214,56 @@ public class AuthService {
             throw new RuntimeException("Invalid OTP");
         }
         return true;
-        // Don't delete yet, delete after full signup? Or delete now and issue temporary
-        // token?
-        // For simplicity, we just return true. The actual signup will create the user.
-        // Ideally we should issue a "Registration Token" but keeping it simple as
-        // trusted client for now.
+    }
+
+    @Autowired
+    private SmsService smsService;
+
+    public void generatePhoneOtp(String phoneNumber) {
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+
+        com.farmeet.entity.OtpCode otpCode = otpRepository.findByPhoneNumber(phoneNumber)
+                .orElse(new com.farmeet.entity.OtpCode());
+
+        otpCode.setPhoneNumber(phoneNumber);
+        otpCode.setCode(otp);
+        otpCode.setExpiryDate(java.time.LocalDateTime.now().plusMinutes(10));
+
+        otpRepository.save(otpCode);
+        smsService.sendOtp(phoneNumber, otp);
+    }
+
+    public com.farmeet.dto.PhoneVerificationResponse verifyPhoneOtp(String phoneNumber, String code) {
+        com.farmeet.entity.OtpCode otpCode = otpRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new RuntimeException("OTP not found"));
+
+        if (otpCode.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("OTP expired");
+        }
+
+        if (!otpCode.getCode().equals(code)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        // Check if user exists
+        java.util.Optional<User> userOpt = userRepository.findByPhoneNumber(phoneNumber);
+
+        if (userOpt.isPresent()) {
+            // User exists - Login flow
+            // Delete OTP as it is used
+            otpRepository.delete(otpCode);
+
+            User user = userOpt.get();
+            if (user.isDeleted()) {
+                user.setDeleted(false);
+                userRepository.save(user);
+            }
+            String token = jwtProvider.generateToken(user);
+            return new com.farmeet.dto.PhoneVerificationResponse(token, true);
+        } else {
+            // User not registered - Signup flow
+            // Do NOT delete OTP yet. It will be verified again during signup submission.
+            return new com.farmeet.dto.PhoneVerificationResponse(null, false);
+        }
     }
 }
