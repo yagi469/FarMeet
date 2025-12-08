@@ -317,4 +317,69 @@ public class AdminService {
                 .setParameter("id", id)
                 .executeUpdate();
     }
+
+    // ========== Hard Delete Methods (Permanent Deletion) ==========
+
+    /**
+     * Permanently delete a user and all related data from the database.
+     * This action cannot be undone.
+     */
+    public void hardDeleteUser(Long id) {
+        // First, hard delete all farms owned by this user (which will cascade to
+        // events)
+        List<Object[]> farmIds = entityManager
+                .createNativeQuery("SELECT id FROM farms WHERE owner_id = :userId")
+                .setParameter("userId", id)
+                .getResultList();
+
+        for (Object[] row : farmIds) {
+            Long farmId = ((Number) row[0]).longValue();
+            hardDeleteFarm(farmId);
+        }
+
+        // Delete the user
+        entityManager.createNativeQuery("DELETE FROM users WHERE id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+    }
+
+    /**
+     * Permanently delete a farm and all related events from the database.
+     * This action cannot be undone.
+     */
+    public void hardDeleteFarm(Long id) {
+        // First, hard delete all events associated with this farm
+        entityManager.createNativeQuery("DELETE FROM experience_events WHERE farm_id = :farmId")
+                .setParameter("farmId", id)
+                .executeUpdate();
+
+        // Delete farm images and features (ElementCollections)
+        entityManager.createNativeQuery("DELETE FROM farm_images WHERE farm_id = :farmId")
+                .setParameter("farmId", id)
+                .executeUpdate();
+        entityManager.createNativeQuery("DELETE FROM farm_features WHERE farm_id = :farmId")
+                .setParameter("farmId", id)
+                .executeUpdate();
+
+        // Delete the farm
+        entityManager.createNativeQuery("DELETE FROM farms WHERE id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+    }
+
+    /**
+     * Permanently delete an event from the database.
+     * This action cannot be undone.
+     */
+    public void hardDeleteEvent(Long id) {
+        // Delete any reservations associated with this event first
+        entityManager.createNativeQuery("DELETE FROM reservations WHERE event_id = :eventId")
+                .setParameter("eventId", id)
+                .executeUpdate();
+
+        // Delete the event
+        entityManager.createNativeQuery("DELETE FROM experience_events WHERE id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+    }
 }

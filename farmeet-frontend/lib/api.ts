@@ -481,6 +481,32 @@ class ApiClient {
         return response.json();
     }
 
+    // ========== Hard Delete (Permanent Deletion) ==========
+
+    async adminHardDeleteUser(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/hard`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to permanently delete user');
+    }
+
+    async adminHardDeleteFarm(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/farms/${id}/hard`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to permanently delete farm');
+    }
+
+    async adminHardDeleteEvent(id: number) {
+        const response = await fetch(`${API_BASE_URL}/admin/events/${id}/hard`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to permanently delete event');
+    }
+
     removeToken() {
         removeToken();
     }

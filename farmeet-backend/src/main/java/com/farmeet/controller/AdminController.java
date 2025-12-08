@@ -322,6 +322,26 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
 
+    // ========== Hard Delete Endpoints (Permanent Deletion) ==========
+
+    @DeleteMapping("/users/{id}/hard")
+    public ResponseEntity<Void> hardDeleteUser(@PathVariable Long id) {
+        adminService.hardDeleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/farms/{id}/hard")
+    public ResponseEntity<Void> hardDeleteFarm(@PathVariable Long id) {
+        adminService.hardDeleteFarm(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/events/{id}/hard")
+    public ResponseEntity<Void> hardDeleteEvent(@PathVariable Long id) {
+        adminService.hardDeleteEvent(id);
+        return ResponseEntity.noContent().build();
+    }
+
     // Event Request DTOs
     public static class CreateEventRequest {
         private Long farmId;

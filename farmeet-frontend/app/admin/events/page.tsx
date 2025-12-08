@@ -145,6 +145,18 @@ export default function AdminEventsPage() {
         }
     };
 
+    const handleHardDelete = async (id: number) => {
+        if (!confirm('⚠️ 警告: このイベントを完全に削除しますか？\n\nこの操作は取り消せません。関連する予約も全て削除されます。')) return;
+        try {
+            await api.adminHardDeleteEvent(id);
+            setEvents(events.filter(e => e.id !== id));
+            alert('イベントを完全に削除しました');
+        } catch (error) {
+            console.error('Failed to hard delete event:', error);
+            alert('イベントの完全削除に失敗しました');
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -378,14 +390,24 @@ export default function AdminEventsPage() {
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     {showDeleted ? (
-                                        <button
-                                            onClick={() => handleRestore(event.id)}
-                                            className="text-green-600 hover:text-green-800 p-2 hover:bg-green-50 rounded-lg transition-colors flex items-center justify-end ml-auto gap-1"
-                                            title="復元"
-                                        >
-                                            <RotateCcw className="w-4 h-4" />
-                                            <span className="text-sm font-medium">復元</span>
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => handleRestore(event.id)}
+                                                className="text-green-600 hover:text-green-800 p-2 hover:bg-green-50 rounded-lg transition-colors flex items-center gap-1"
+                                                title="復元"
+                                            >
+                                                <RotateCcw className="w-4 h-4" />
+                                                <span className="text-sm font-medium">復元</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleHardDelete(event.id)}
+                                                className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1"
+                                                title="完全削除"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                <span className="text-sm font-medium">完全削除</span>
+                                            </button>
+                                        </div>
                                     ) : (
                                         <div className="flex items-center justify-end gap-2">
                                             <button
