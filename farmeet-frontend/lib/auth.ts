@@ -10,7 +10,7 @@ export interface AuthState {
 export const authHelper = {
     async login(email: string, password: string): Promise<AuthState> {
         try {
-            const response = await api.login(email, password);
+            const response = await api.login({ email, password });
             setToken(response.token);
             return {
                 user: {
