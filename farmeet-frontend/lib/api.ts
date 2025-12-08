@@ -507,6 +507,48 @@ class ApiClient {
         if (!response.ok) throw new Error('Failed to permanently delete event');
     }
 
+    // ========== Analytics ==========
+
+    async getRecentActivities(limit: number = 20) {
+        const response = await fetch(`${API_BASE_URL}/admin/analytics/activities?limit=${limit}`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch activities');
+        return response.json();
+    }
+
+    async getAnalyticsStats() {
+        const response = await fetch(`${API_BASE_URL}/admin/analytics/stats`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch analytics stats');
+        return response.json();
+    }
+
+    async getDailyStats(days: number = 30) {
+        const response = await fetch(`${API_BASE_URL}/admin/analytics/daily?days=${days}`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch daily stats');
+        return response.json();
+    }
+
+    async getPopularFarms(limit: number = 5) {
+        const response = await fetch(`${API_BASE_URL}/admin/analytics/popular-farms?limit=${limit}`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch popular farms');
+        return response.json();
+    }
+
+    async getPopularEvents(limit: number = 5) {
+        const response = await fetch(`${API_BASE_URL}/admin/analytics/popular-events?limit=${limit}`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch popular events');
+        return response.json();
+    }
+
     removeToken() {
         removeToken();
     }

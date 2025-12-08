@@ -23,16 +23,19 @@ public class AdminService {
     private final FarmRepository farmRepository;
     private final com.farmeet.repository.ExperienceEventRepository experienceEventRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
 
     public AdminService(UserRepository userRepository, FarmRepository farmRepository,
             com.farmeet.repository.ExperienceEventRepository experienceEventRepository,
-            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder,
+            ActivityLogService activityLogService) {
         this.userRepository = userRepository;
         this.farmRepository = farmRepository;
         this.experienceEventRepository = experienceEventRepository;
         this.passwordEncoder = passwordEncoder;
+        this.activityLogService = activityLogService;
     }
 
     public List<User> getAllUsers() {
@@ -43,6 +46,8 @@ public class AdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
+        String username = user.getUsername();
+
         // Delete all farms (and their events) owned by this user
         List<Farm> farms = farmRepository.findByOwner(user);
         for (Farm farm : farms) {
@@ -50,6 +55,9 @@ public class AdminService {
         }
 
         userRepository.delete(user);
+
+        // Log the ban action
+        activityLogService.logAdminUserBan(null, id, username);
     }
 
     public void restoreUser(Long id) {

@@ -22,6 +22,9 @@ public class AuthService {
     @Autowired
     private JwtProvider jwtProvider;
 
+    @Autowired
+    private ActivityLogService activityLogService;
+
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
@@ -85,6 +88,9 @@ public class AuthService {
 
         userRepository.save(user);
 
+        // Log signup activity
+        activityLogService.logUserSignup(user.getId(), user.getUsername());
+
         String token = jwtProvider.generateToken(user);
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole().name());
     }
@@ -101,6 +107,9 @@ public class AuthService {
             user.setDeleted(false);
             userRepository.save(user);
         }
+
+        // Log login activity
+        activityLogService.logUserLogin(user.getId(), user.getUsername());
 
         String token = jwtProvider.generateToken(user);
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole().name());
@@ -197,6 +206,9 @@ public class AuthService {
             user.setDeleted(false);
             userRepository.save(user);
         }
+
+        // Log login activity
+        activityLogService.logUserLogin(user.getId(), user.getUsername());
 
         String token = jwtProvider.generateToken(user);
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getRole().name());

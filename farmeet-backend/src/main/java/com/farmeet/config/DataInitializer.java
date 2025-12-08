@@ -6,6 +6,8 @@ import com.farmeet.entity.User;
 import com.farmeet.repository.ExperienceEventRepository;
 import com.farmeet.repository.FarmRepository;
 import com.farmeet.repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,12 @@ public class DataInitializer implements CommandLineRunner {
         private final ExperienceEventRepository eventRepository;
         private final PasswordEncoder passwordEncoder;
         private final TransactionTemplate transactionTemplate;
+
+        @Value("${admin.email:}")
+        private String adminEmail;
+
+        @Value("${admin.password:}")
+        private String adminPassword;
 
         @jakarta.persistence.PersistenceContext
         private jakarta.persistence.EntityManager entityManager;
@@ -126,26 +134,32 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         private User createAdminIfNotExists() {
-                String email = "admin@example.com";
+                // Skip if admin credentials are not configured
+                if (adminEmail == null || adminEmail.isEmpty() || adminPassword == null || adminPassword.isEmpty()) {
+                        System.out.println("Admin credentials not configured. Skipping admin user creation.");
+                        System.out.println(
+                                        "To create admin user, set ADMIN_EMAIL and ADMIN_PASSWORD environment variables.");
+                        return null;
+                }
 
                 // Execute update in transaction
                 transactionTemplate.execute(status -> {
                         // Restore if exists but deleted (bypassing @SQLRestriction)
                         entityManager.createNativeQuery("UPDATE users SET deleted = false WHERE email = :email")
-                                        .setParameter("email", email)
+                                        .setParameter("email", adminEmail)
                                         .executeUpdate();
                         return null;
                 });
 
-                return userRepository.findByEmail(email).orElseGet(() -> {
+                return userRepository.findByEmail(adminEmail).orElseGet(() -> {
                         User user = new User();
                         user.setUsername("admin");
-                        user.setEmail(email);
-                        user.setPassword(passwordEncoder.encode("admin123"));
+                        user.setEmail(adminEmail);
+                        user.setPassword(passwordEncoder.encode(adminPassword));
                         user.setRole(User.Role.ADMIN);
                         user.setAvatarUrl("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80");
                         User saved = userRepository.save(user);
-                        System.out.println("Created admin user: " + email);
+                        System.out.println("Created admin user: " + adminEmail);
                         return saved;
                 });
         }
