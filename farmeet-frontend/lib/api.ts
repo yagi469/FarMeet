@@ -308,6 +308,16 @@ class ApiClient {
         return response.json();
     }
 
+    async adminCreateUser(data: { username: string; email: string; password?: string; role: string }) {
+        const response = await fetch(`${API_BASE_URL}/admin/users`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to create user');
+        return response.json();
+    }
+
     async adminDeleteUser(id: number) {
         const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
             method: 'DELETE',
