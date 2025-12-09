@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"; // Assuming this exists or using standard textarea
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface Farm {
     id: number;
@@ -264,11 +265,11 @@ export default function AdminFarmsPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">画像URL</label>
-                                        <Input
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">画像</label>
+                                        <ImageUpload
                                             value={formData.imageUrl}
-                                            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                            placeholder="https://..."
+                                            onChange={(url) => setFormData({ ...formData, imageUrl: url as string })}
+                                            folder="farms"
                                         />
                                     </div>
                                     <div>

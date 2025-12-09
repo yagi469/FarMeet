@@ -549,6 +549,62 @@ class ApiClient {
         return response.json();
     }
 
+    // ========== Image Upload ==========
+
+    async uploadImage(file: File, folder: string = 'general'): Promise<{ url: string }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', folder);
+
+        const token = getToken();
+        const headers: HeadersInit = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/upload/image`, {
+            method: 'POST',
+            headers,
+            body: formData,
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to upload image');
+        }
+        return response.json();
+    }
+
+    async uploadImages(files: File[], folder: string = 'general'): Promise<{ urls: string[], errors?: string[] }> {
+        const formData = new FormData();
+        files.forEach(file => formData.append('files', file));
+        formData.append('folder', folder);
+
+        const token = getToken();
+        const headers: HeadersInit = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/upload/images`, {
+            method: 'POST',
+            headers,
+            body: formData,
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to upload images');
+        }
+        return response.json();
+    }
+
+    async deleteImage(imageUrl: string): Promise<void> {
+        const response = await fetch(`${API_BASE_URL}/upload/image?url=${encodeURIComponent(imageUrl)}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to delete image');
+    }
+
     removeToken() {
         removeToken();
     }
