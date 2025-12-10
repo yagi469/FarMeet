@@ -3,6 +3,7 @@ package com.farmeet.config;
 import com.farmeet.entity.User;
 import com.farmeet.repository.UserRepository;
 import com.farmeet.security.JwtProvider;
+import com.farmeet.service.ActivityLogService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,13 +20,16 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
+    private final ActivityLogService activityLogService;
 
     @Value("${app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
-    public OAuth2SuccessHandler(JwtProvider jwtProvider, UserRepository userRepository) {
+    public OAuth2SuccessHandler(JwtProvider jwtProvider, UserRepository userRepository,
+            ActivityLogService activityLogService) {
         this.jwtProvider = jwtProvider;
         this.userRepository = userRepository;
+        this.activityLogService = activityLogService;
     }
 
     @Override
@@ -37,9 +41,13 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String name = oAuth2User.getAttribute("name");
         String picture = oAuth2User.getAttribute("picture");
 
+        // Track if this is a new user signup
+        final boolean[] isNewUser = { false };
+
         // Find or create user
         User user = userRepository.findByEmailIncludingDeleted(email)
                 .orElseGet(() -> {
+                    isNewUser[0] = true;
                     User newUser = new User();
                     newUser.setEmail(email);
                     newUser.setUsername(name != null ? name : email.split("@")[0]);
@@ -61,6 +69,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             user.setAvatarUrl(picture);
             userRepository.save(user);
         }
+
+        // Log activity
+        if (isNewUser[0]) {
+            // Log signup activity for new users
+            activityLogService.logUserSignup(user.getId(), user.getUsername());
+        }
+        // Log login activity for all users (including new signups)
+        activityLogService.logUserLogin(user.getId(), user.getUsername());
 
         // Generate JWT token
         String token = jwtProvider.generateToken(user);

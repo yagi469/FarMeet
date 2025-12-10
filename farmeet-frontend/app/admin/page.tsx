@@ -101,13 +101,29 @@ export default function AdminDashboardPage() {
     };
 
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
+        // サーバーからのLocalDateTime（タイムゾーン情報なし）をJSTとして解釈
+        // 例: "2025-12-11T08:22:31" のような形式
+        // サーバーがJSTで時刻を保存している場合、そのまま解釈する
+        // サーバーがUTCで保存している場合は、+9時間のオフセットを追加
+        let date: Date;
+
+        // ISO形式の文字列にタイムゾーン情報がない場合、UTCとして解釈されるので
+        // 明示的にUTCとしてパースし、表示時にはローカルタイムゾーンで表示
+        if (dateString && !dateString.includes('Z') && !dateString.includes('+')) {
+            // タイムゾーン情報がない場合、UTCとして解釈されるのでそのままパース
+            // ブラウザのローカルタイムゾーンで表示される
+            date = new Date(dateString + 'Z'); // UTCとして明示的にパース
+        } else {
+            date = new Date(dateString);
+        }
+
         const now = new Date();
         const diff = now.getTime() - date.getTime();
         const minutes = Math.floor(diff / 60000);
         const hours = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
 
+        if (minutes < 0) return '今';
         if (minutes < 60) return `${minutes}分前`;
         if (hours < 24) return `${hours}時間前`;
         if (days < 7) return `${days}日前`;
@@ -190,9 +206,9 @@ export default function AdminDashboardPage() {
                                 popularFarms.map((farm, index) => (
                                     <div key={farm.id} className="p-3 flex items-center gap-3">
                                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                                index === 1 ? 'bg-gray-100 text-gray-600' :
-                                                    index === 2 ? 'bg-orange-100 text-orange-700' :
-                                                        'bg-gray-50 text-gray-500'
+                                            index === 1 ? 'bg-gray-100 text-gray-600' :
+                                                index === 2 ? 'bg-orange-100 text-orange-700' :
+                                                    'bg-gray-50 text-gray-500'
                                             }`}>
                                             {index + 1}
                                         </span>
@@ -222,9 +238,9 @@ export default function AdminDashboardPage() {
                                 popularEvents.map((event, index) => (
                                     <div key={event.id} className="p-3 flex items-center gap-3">
                                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                                index === 1 ? 'bg-gray-100 text-gray-600' :
-                                                    index === 2 ? 'bg-orange-100 text-orange-700' :
-                                                        'bg-gray-50 text-gray-500'
+                                            index === 1 ? 'bg-gray-100 text-gray-600' :
+                                                index === 2 ? 'bg-orange-100 text-orange-700' :
+                                                    'bg-gray-50 text-gray-500'
                                             }`}>
                                             {index + 1}
                                         </span>
