@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ShareButtonsProps {
     url: string;
@@ -10,9 +10,14 @@ interface ShareButtonsProps {
 
 export default function ShareButtons({ url, title, description }: ShareButtonsProps) {
     const [copied, setCopied] = useState(false);
+    const [canNativeShare, setCanNativeShare] = useState(false);
+
+    useEffect(() => {
+        // Web Share API がサポートされているか確認
+        setCanNativeShare(typeof navigator !== 'undefined' && !!navigator.share);
+    }, []);
 
     const encodedUrl = encodeURIComponent(url);
-    const encodedTitle = encodeURIComponent(title);
     const encodedText = encodeURIComponent(`${title}${description ? ` - ${description}` : ''}`);
 
     const shareUrls = {
@@ -24,6 +29,19 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
 
     const handleShare = (platform: keyof typeof shareUrls) => {
         window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+    };
+
+    const handleNativeShare = async () => {
+        try {
+            await navigator.share({
+                title: title,
+                text: description || title,
+                url: url,
+            });
+        } catch (error) {
+            // ユーザーがキャンセルした場合もエラーになるので無視
+            console.log('Share cancelled or failed:', error);
+        }
     };
 
     const handleCopyLink = async () => {
@@ -72,6 +90,19 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
             </button>
+
+            {/* Native Share (Instagram含む) - モバイルでのみ表示 */}
+            {canNativeShare && (
+                <button
+                    onClick={handleNativeShare}
+                    className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 text-white flex items-center justify-center transition-opacity"
+                    title="その他のアプリで共有（Instagram等）"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                </button>
+            )}
 
             {/* Copy Link */}
             <button
