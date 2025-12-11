@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { LayoutDashboard, Users, Tractor, LogOut, Calendar, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Tractor, LogOut, Calendar, Menu, X, Home } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -145,7 +145,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         );
                     })}
                 </nav>
-                <div className="p-4 border-t">
+                <div className="p-4 border-t space-y-2">
+                    <Link
+                        href="/"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 w-full text-left text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                        <Home className="w-5 h-5" />
+                        トップページへ
+                    </Link>
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 px-4 py-3 w-full text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
