@@ -23,8 +23,8 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
     const shareUrls = {
         line: `https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedText}`,
         twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
-        // Facebook シンプルシェア（モバイルフレンドリー）
-        facebook: `https://m.facebook.com/sharer.php?u=${encodedUrl}`,
+        // Facebook
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
     };
 
     const handleShare = (platform: keyof typeof shareUrls) => {
