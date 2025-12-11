@@ -95,39 +95,38 @@ export default function Home() {
     });
   };
 
-  const handleSearch = async (keyword: string) => {
+  const handleSearch = (keyword: string) => {
     setSearchKeyword(keyword);
-    await performSearch(keyword, selectedLocation, selectedDate, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
-  const handleLocationChange = async (location: string) => {
+  const handleLocationChange = (location: string) => {
     setSelectedLocation(location);
-    await performSearch(searchKeyword, location, selectedDate, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
-  const handleDateChange = async (date: string) => {
+  const handleDateChange = (date: string) => {
     setSelectedDate(date);
-    await performSearch(searchKeyword, selectedLocation, date, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
-  const handleGuestsChange = async (newAdults: number, newChildren: number) => {
+  const handleGuestsChange = (newAdults: number, newChildren: number) => {
     setAdults(newAdults);
     setChildren(newChildren);
-    await performSearch(searchKeyword, selectedLocation, selectedDate, newAdults, newChildren, selectedCategory, priceRange.min, priceRange.max);
   };
 
 
 
 
-
-  const handleCategoryChange = async (category: string) => {
+  const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    await performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, category, priceRange.min, priceRange.max);
+    // カテゴリーは即時検索（タブなので）
+    performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, category, priceRange.min, priceRange.max);
   };
 
-  const handlePriceChange = async (min?: number, max?: number) => {
+  const handlePriceChange = (min?: number, max?: number) => {
     setPriceRange({ min, max });
-    await performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, selectedCategory, min, max);
+  };
+
+  const handleSearchButtonClick = () => {
+    performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
   const performSearch = async (keyword: string, location: string, date: string, adultsCount: number, childrenCount: number, category: string, minPrice?: number, maxPrice?: number) => {
@@ -197,28 +196,34 @@ export default function Home() {
             />
           </div>
           <div className="hidden md:block w-px h-8 bg-gray-300" />
-          <div className="flex-1 px-4 py-2 md:py-0 mb-4 md:mb-0">
+          <div className="flex-1 px-4 py-2 md:py-0 mb-4 md:mb-0 min-w-[150px]">
             <label className="text-xs font-bold text-gray-800 block mb-1">価格帯</label>
-            <select
-              value={priceRange.max === undefined ? '' : `${priceRange.min || 0}-${priceRange.max}`}
-              onChange={(e) => {
-                if (e.target.value === '') {
-                  handlePriceChange(undefined, undefined);
-                } else {
-                  const [min, max] = e.target.value.split('-').map(Number);
-                  handlePriceChange(min, max);
-                }
-              }}
-              className="w-full text-sm text-gray-600 bg-transparent focus:outline-none cursor-pointer"
-            >
-              <option value="">指定なし</option>
-              <option value="0-1000">〜¥1,000</option>
-              <option value="0-3000">〜¥3,000</option>
-              <option value="0-5000">〜¥5,000</option>
-              <option value="5000-999999">¥5,000〜</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="10000"
+                step="500"
+                value={priceRange.max || 10000}
+                onChange={(e) => {
+                  const max = Number(e.target.value);
+                  if (max === 10000) {
+                    handlePriceChange(undefined, undefined);
+                  } else {
+                    handlePriceChange(0, max);
+                  }
+                }}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+              />
+              <span className="text-sm text-gray-600 whitespace-nowrap min-w-[70px]">
+                {priceRange.max === undefined ? '指定なし' : `〜¥${priceRange.max.toLocaleString()}`}
+              </span>
+            </div>
           </div>
-          <button className="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 md:p-4 w-full md:w-auto flex justify-center items-center transition-colors shadow-md">
+          <button
+            onClick={handleSearchButtonClick}
+            className="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 md:p-4 w-full md:w-auto flex justify-center items-center transition-colors shadow-md"
+          >
             <span className="md:hidden font-bold mr-2">検索</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
