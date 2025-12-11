@@ -13,9 +13,10 @@ interface FarmCardProps {
     onFavoriteChange?: (farmId: number, isFavorite: boolean) => void;
     averageRating?: number;
     reviewCount?: number;
+    minPrice?: number;
 }
 
-export default function FarmCard({ farm, isFavorite = false, onFavoriteChange, averageRating, reviewCount }: FarmCardProps) {
+export default function FarmCard({ farm, isFavorite = false, onFavoriteChange, averageRating, reviewCount, minPrice }: FarmCardProps) {
     const router = useRouter();
     const [favorite, setFavorite] = useState(isFavorite);
     const [isLoading, setIsLoading] = useState(false);
@@ -104,7 +105,11 @@ export default function FarmCard({ farm, isFavorite = false, onFavoriteChange, a
                     <p className="text-gray-500 text-sm truncate">{farm.location}</p>
                     <p className="text-gray-700 text-sm line-clamp-2">{farm.description}</p>
                     <p className="font-medium text-gray-900">
-                        <span className="font-semibold">¥3,500</span> / 1人
+                        {minPrice ? (
+                            <><span className="font-semibold">¥{minPrice.toLocaleString()}～</span> / 1人</>
+                        ) : (
+                            <span className="text-gray-400">価格未設定</span>
+                        )}
                     </p>
                 </div>
             </div>

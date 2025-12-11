@@ -173,4 +173,22 @@ public class FarmService {
                 .sorted()
                 .collect(Collectors.toList());
     }
+
+    // 農園ごとの最安価格を取得
+    public java.util.Map<Long, Integer> getMinPrices(java.util.List<Long> farmIds) {
+        java.util.Map<Long, Integer> priceMap = new java.util.HashMap<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Long farmId : farmIds) {
+            List<ExperienceEvent> events = eventRepository.findByFarmIdAndEventDateAfter(farmId, now);
+            if (!events.isEmpty()) {
+                int minPrice = events.stream()
+                        .mapToInt(e -> e.getPrice().intValue())
+                        .min()
+                        .orElse(0);
+                priceMap.put(farmId, minPrice);
+            }
+        }
+        return priceMap;
+    }
 }

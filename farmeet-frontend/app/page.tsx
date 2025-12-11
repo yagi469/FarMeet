@@ -25,6 +25,7 @@ export default function Home() {
   const [ratingsMap, setRatingsMap] = useState<Map<number, { avgRating: number; count: number }>>(new Map());
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
   const [priceRange, setPriceRange] = useState<{ min?: number; max?: number }>({});
+  const [pricesMap, setPricesMap] = useState<Record<number, number>>({});
 
   useEffect(() => {
     loadFarms();
@@ -41,6 +42,8 @@ export default function Home() {
       await loadFavoriteStatus(farmIds);
       // Load ratings for all farms
       await loadRatings(farmIds);
+      // Load min prices for all farms
+      await loadPrices(farmIds);
     } catch (error) {
       console.error('農園の読み込みに失敗しました:', error);
     } finally {
@@ -67,6 +70,16 @@ export default function Home() {
       setRatingsMap(ratings);
     } catch (error) {
       console.error('評価データの取得に失敗しました:', error);
+    }
+  };
+
+  const loadPrices = async (farmIds: number[]) => {
+    if (farmIds.length === 0) return;
+    try {
+      const prices = await api.getMinPrices(farmIds);
+      setPricesMap(prices);
+    } catch (error) {
+      console.error('価格データの取得に失敗しました:', error);
     }
   };
 
@@ -299,6 +312,7 @@ export default function Home() {
                 onFavoriteChange={handleFavoriteChange}
                 averageRating={ratingsMap.get(farm.id)?.avgRating}
                 reviewCount={ratingsMap.get(farm.id)?.count}
+                minPrice={pricesMap[farm.id]}
               />
             ))}
           </div>

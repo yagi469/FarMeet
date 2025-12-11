@@ -65,6 +65,13 @@ public class FarmController {
         return ResponseEntity.ok(locations);
     }
 
+    // 農園の最安価格を一括取得
+    @GetMapping("/min-prices")
+    public ResponseEntity<java.util.Map<Long, Integer>> getMinPrices(@RequestParam List<Long> ids) {
+        java.util.Map<Long, Integer> prices = farmService.getMinPrices(ids);
+        return ResponseEntity.ok(prices);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Farm> updateFarm(@PathVariable Long id,
             @RequestBody Farm farm,

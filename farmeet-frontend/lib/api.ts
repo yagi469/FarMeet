@@ -188,6 +188,15 @@ class ApiClient {
         return response.json();
     }
 
+    // 農園の最安価格を一括取得
+    async getMinPrices(ids: number[]): Promise<Record<number, number>> {
+        if (ids.length === 0) return {};
+        const params = ids.map(id => `ids=${id}`).join('&');
+        const response = await fetch(`${API_BASE_URL}/farms/min-prices?${params}`);
+        if (!response.ok) throw new Error('最安価格の取得に失敗しました');
+        return response.json();
+    }
+
     async updateFarm(id: number, data: { name: string; description: string; location: string; imageUrl?: string }) {
         const response = await fetch(`${API_BASE_URL}/farms/${id}`, {
             method: 'PUT',
