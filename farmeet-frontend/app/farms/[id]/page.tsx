@@ -22,6 +22,7 @@ export default function FarmDetailPage() {
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [selectedEvent, setSelectedEvent] = useState<ExperienceEvent | null>(null);
+    const [eventsOnSelectedDate, setEventsOnSelectedDate] = useState<ExperienceEvent[]>([]);
 
     useEffect(() => {
         loadData();
@@ -29,10 +30,28 @@ export default function FarmDetailPage() {
 
     useEffect(() => {
         if (selectedDate && events.length > 0) {
-            // Find event on selected date
-            const targetDateStr = selectedDate.toISOString().split('T')[0];
-            const foundEvent = events.find(e => e.eventDate.startsWith(targetDateStr));
-            setSelectedEvent(foundEvent || null);
+            // Find events on selected date (using local timezone)
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const targetDateStr = `${year}-${month}-${day}`;
+
+            const dayEvents = events.filter(e => {
+                // Compare using the date part of eventDate
+                const eventDatePart = e.eventDate.split('T')[0];
+                return eventDatePart === targetDateStr;
+            });
+
+            setEventsOnSelectedDate(dayEvents);
+            // Auto-select first event if only one exists
+            if (dayEvents.length === 1) {
+                setSelectedEvent(dayEvents[0]);
+            } else {
+                setSelectedEvent(null);
+            }
+        } else {
+            setEventsOnSelectedDate([]);
+            setSelectedEvent(null);
         }
     }, [selectedDate, events]);
 
@@ -171,15 +190,76 @@ export default function FarmDetailPage() {
                                     modifiersClassNames={{
                                         event: "bg-green-100 font-bold text-green-700 rounded-full"
                                     }}
+                                    disabled={(date) => {
+                                        // イベントがある日付のみ選択可能
+                                        const year = date.getFullYear();
+                                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                                        const day = String(date.getDate()).padStart(2, '0');
+                                        const dateStr = `${year}-${month}-${day}`;
+                                        return !events.some(e => e.eventDate.split('T')[0] === dateStr);
+                                    }}
                                     locale={ja}
                                 />
                             </div>
 
+                            {/* 時間スロット選択 */}
+                            {eventsOnSelectedDate.length > 0 && (
+                                <div className="mb-4">
+                                    <p className="text-sm font-medium text-gray-700 mb-2">時間を選択</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {eventsOnSelectedDate.map((event) => (
+                                            <button
+                                                key={event.id}
+                                                onClick={() => setSelectedEvent(event)}
+                                                className={`p-3 rounded-lg border text-sm transition-all ${selectedEvent?.id === event.id
+                                                    ? 'border-green-500 bg-green-50 ring-2 ring-green-500'
+                                                    : 'border-gray-200 hover:border-gray-400'
+                                                    } ${event.availableSlots === 0 ? 'opacity-50' : ''}`}
+                                                disabled={event.availableSlots === 0}
+                                            >
+                                                <div className="font-medium">
+                                                    {new Date(event.eventDate).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {event.availableSlots === 0 ? '満席' : `残り${event.availableSlots}席`}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* イベント詳細 */}
                             {selectedEvent ? (
-                                <div className="mb-4 p-3 bg-gray-50 rounded text-sm">
-                                    <p className="font-bold mb-1">{selectedEvent.title}</p>
-                                    <p className="text-gray-600">残り {selectedEvent.availableSlots} 席</p>
-                                    <p className="text-gray-600">{new Date(selectedEvent.eventDate).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~</p>
+                                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                    <p className="font-bold text-lg mb-2">{selectedEvent.title}</p>
+                                    <div className="space-y-1 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">日時</span>
+                                            <span className="font-medium">
+                                                {new Date(selectedEvent.eventDate).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })}
+                                                {' '}
+                                                {new Date(selectedEvent.eventDate).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} 〜
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">料金</span>
+                                            <span className="font-medium">¥{selectedEvent.price.toLocaleString()} / 人</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">空き状況</span>
+                                            <span className={`font-medium ${selectedEvent.availableSlots <= 3 ? 'text-orange-600' : 'text-green-600'}`}>
+                                                残り {selectedEvent.availableSlots} 席
+                                            </span>
+                                        </div>
+                                        {selectedEvent.description && (
+                                            <p className="text-gray-600 mt-2 pt-2 border-t">{selectedEvent.description}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : eventsOnSelectedDate.length > 0 ? (
+                                <div className="mb-4 text-center text-sm text-gray-500 py-3">
+                                    上記の時間を選択してください
                                 </div>
                             ) : (
                                 <div className="mb-4 text-center text-sm text-gray-500 py-3">
