@@ -111,7 +111,11 @@ export default function FarmDetailClient({ farmId, initialFarm }: FarmDetailClie
                         {farm.location}
                     </div>
                     <ShareButtons
-                        url={typeof window !== 'undefined' ? window.location.href : ''}
+                        url={typeof window !== 'undefined'
+                            ? (process.env.NEXT_PUBLIC_SITE_URL
+                                ? `${process.env.NEXT_PUBLIC_SITE_URL}${window.location.pathname}`
+                                : window.location.href)
+                            : ''}
                         title={farm.name}
                         description={farm.description}
                     />
