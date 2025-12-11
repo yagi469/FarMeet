@@ -31,7 +31,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         };
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+    // 画像URLの場合も同様にbaseUrlを使用
     const ogImageUrl = `${baseUrl}/api/og?title=${encodeURIComponent(farm.name)}&description=${encodeURIComponent(farm.description || '')}&location=${encodeURIComponent(farm.location || '')}&image=${encodeURIComponent(farm.imageUrl || '')}`;
 
     return {

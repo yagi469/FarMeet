@@ -18,7 +18,7 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
     const shareUrls = {
         line: `https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedText}`,
         twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&display=popup&ref=plugin&src=share_button`,
     };
 
     const handleShare = (platform: keyof typeof shareUrls) => {
