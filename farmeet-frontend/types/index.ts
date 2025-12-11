@@ -37,7 +37,7 @@ export interface Reservation {
     user: User;
     event: ExperienceEvent;
     numberOfPeople: number;
-    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
     totalPrice: number;
     createdAt: string;
 }
@@ -71,4 +71,13 @@ export interface ReservationRequest {
 export interface PhoneVerificationResponse {
     token: string | null;
     registered: boolean;
+}
+
+export interface Review {
+    id: number;
+    farmId: number;
+    user: User;
+    rating: number;
+    comment: string;
+    createdAt: string;
 }

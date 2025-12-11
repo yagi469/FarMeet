@@ -5,37 +5,34 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reservations")
+@Table(name = "reviews", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "user_id", "farm_id" })
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Reservation {
+public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
-    private ExperienceEvent event;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "farm_id", nullable = false)
+    private Farm farm;
 
-    @Column(name = "number_of_people", nullable = false)
-    private Integer numberOfPeople;
-
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ReservationStatus status = ReservationStatus.PENDING;
+    private Integer rating; // 1-5
 
-    @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalPrice;
+    @Column(columnDefinition = "TEXT")
+    private String comment;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -43,9 +40,5 @@ public class Reservation {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-    }
-
-    public enum ReservationStatus {
-        PENDING, CONFIRMED, CANCELLED, COMPLETED
     }
 }

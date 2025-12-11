@@ -20,6 +20,7 @@ export default function Home() {
   const [children, setChildren] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [ratingsMap, setRatingsMap] = useState<Map<number, { avgRating: number; count: number }>>(new Map());
 
   useEffect(() => {
     loadFarms();
@@ -29,8 +30,11 @@ export default function Home() {
     try {
       const data = await api.getFarms();
       setFarms(data);
+      const farmIds = data.map((f: Farm) => f.id);
       // Load favorite status if user is logged in
-      await loadFavoriteStatus(data.map((f: Farm) => f.id));
+      await loadFavoriteStatus(farmIds);
+      // Load ratings for all farms
+      await loadRatings(farmIds);
     } catch (error) {
       console.error('農園の読み込みに失敗しました:', error);
     } finally {
@@ -47,6 +51,16 @@ export default function Home() {
       setFavoriteIds(new Set(ids));
     } catch (error) {
       console.error('お気に入り状態の取得に失敗しました:', error);
+    }
+  };
+
+  const loadRatings = async (farmIds: number[]) => {
+    if (farmIds.length === 0) return;
+    try {
+      const ratings = await api.getFarmRatings(farmIds);
+      setRatingsMap(ratings);
+    } catch (error) {
+      console.error('評価データの取得に失敗しました:', error);
     }
   };
 
@@ -100,8 +114,11 @@ export default function Home() {
         category || undefined
       );
       setFarms(data);
+      const farmIds = data.map((f: Farm) => f.id);
       // Reload favorite status for new farms
-      await loadFavoriteStatus(data.map((f: Farm) => f.id));
+      await loadFavoriteStatus(farmIds);
+      // Reload ratings for new farms
+      await loadRatings(farmIds);
     } catch (error) {
       console.error('検索に失敗しました:', error);
     } finally {
@@ -207,6 +224,8 @@ export default function Home() {
                 farm={farm}
                 isFavorite={favoriteIds.has(farm.id)}
                 onFavoriteChange={handleFavoriteChange}
+                averageRating={ratingsMap.get(farm.id)?.avgRating}
+                reviewCount={ratingsMap.get(farm.id)?.count}
               />
             ))}
           </div>

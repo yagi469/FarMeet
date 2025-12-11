@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, User as UserIcon, Check } from 'lucide-react';
 import { ja } from 'date-fns/locale';
+import ReviewSection from '@/components/ReviewSection';
 
 export default function FarmDetailPage() {
     const params = useParams();
@@ -132,6 +133,9 @@ export default function FarmDetailPage() {
                             <p className="text-gray-500">特徴情報は登録されていません</p>
                         )}
                     </div>
+
+                    {/* Reviews Section */}
+                    <ReviewSection farmId={Number(params.id)} />
                 </div>
 
                 {/* Right Column: Sticky Reservation Widget */}

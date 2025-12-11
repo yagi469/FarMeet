@@ -1,4 +1,4 @@
-import { AuthRequest, AuthResponse, PhoneVerificationResponse, SignupRequest } from "../types";
+import { AuthRequest, AuthResponse, PhoneVerificationResponse, Review, SignupRequest } from "../types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -646,6 +646,56 @@ class ApiClient {
         }
         const data = await response.json();
         return data.favoriteIds || [];
+    }
+
+    // ========== Reviews ==========
+
+    async getReviews(farmId: number): Promise<{
+        reviews: Review[];
+        averageRating: number;
+        reviewCount: number;
+    }> {
+        const response = await fetch(`${API_BASE_URL}/farms/${farmId}/reviews`);
+        if (!response.ok) throw new Error('Failed to fetch reviews');
+        return response.json();
+    }
+
+    async createReview(farmId: number, rating: number, comment: string): Promise<Review> {
+        const response = await fetch(`${API_BASE_URL}/farms/${farmId}/reviews`, {
+            method: 'POST',
+            headers: {
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ rating, comment }),
+        });
+        if (!response.ok) throw new Error('Failed to create review');
+        return response.json();
+    }
+
+    async deleteReview(reviewId: number): Promise<void> {
+        const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to delete review');
+    }
+
+    async getFarmRatings(farmIds: number[]): Promise<Map<number, { avgRating: number; count: number }>> {
+        const params = farmIds.map(id => `farmIds=${id}`).join('&');
+        const response = await fetch(`${API_BASE_URL}/farms/ratings?${params}`);
+        if (!response.ok) {
+            return new Map();
+        }
+        const data = await response.json();
+        const ratingsMap = new Map<number, { avgRating: number; count: number }>();
+        if (data.ratings) {
+            for (const [farmId, values] of Object.entries(data.ratings)) {
+                const [avgRating, count] = values as number[];
+                ratingsMap.set(Number(farmId), { avgRating, count });
+            }
+        }
+        return ratingsMap;
     }
 }
 
