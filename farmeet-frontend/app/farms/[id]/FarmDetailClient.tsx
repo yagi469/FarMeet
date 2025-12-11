@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { authHelper } from '@/lib/auth';
@@ -95,9 +95,9 @@ export default function FarmDetailClient({ farmId, initialFarm }: FarmDetailClie
     if (loading) return <div className="flex justify-center py-20">読み込み中...</div>;
     if (!farm) return <div className="text-center py-20">農園が見つかりませんでした</div>;
 
-    // 画像配列を安全に生成（undefined/空文字列を除外）
+    // 画像配列を安全に生成（undefined/空文字列/null文字列を除外）
     const rawImages = farm.images && farm.images.length > 0 ? farm.images : [farm.imageUrl];
-    const images = rawImages.filter((img): img is string => !!img && img !== '');
+    const images = rawImages.filter((img): img is string => !!img && img.trim() !== '' && img !== 'null');
     const features = farm.features || [];
 
     return (
@@ -305,6 +305,16 @@ export default function FarmDetailClient({ farmId, initialFarm }: FarmDetailClie
 
 function ImageWithFallback({ src, alt, className }: { src: string | undefined, alt: string, className?: string }) {
     const [error, setError] = useState(false);
+    // @ts-ignore
+    const imgRef = useRef<HTMLImageElement>(null);
+
+    // マウント時に画像のロード状態をチェック
+    useEffect(() => {
+        const img = imgRef.current;
+        if (img && img.complete && img.naturalWidth === 0) {
+            setError(true);
+        }
+    }, [src]);
 
     if (!src || src === '' || error) {
         return (
@@ -318,6 +328,7 @@ function ImageWithFallback({ src, alt, className }: { src: string | undefined, a
 
     return (
         <img
+            ref={imgRef}
             src={src}
             alt={alt}
             className={`w-full h-full object-cover ${className}`}
