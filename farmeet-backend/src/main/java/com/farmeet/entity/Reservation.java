@@ -30,6 +30,15 @@ public class Reservation {
     @Column(name = "number_of_people", nullable = false)
     private Integer numberOfPeople;
 
+    @Column(name = "number_of_adults")
+    private Integer numberOfAdults; // 13歳以上
+
+    @Column(name = "number_of_children")
+    private Integer numberOfChildren; // 6-12歳
+
+    @Column(name = "number_of_infants")
+    private Integer numberOfInfants; // 0-5歳（無料）
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus status = ReservationStatus.PENDING;

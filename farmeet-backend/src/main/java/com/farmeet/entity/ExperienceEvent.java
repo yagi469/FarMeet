@@ -40,6 +40,9 @@ public class ExperienceEvent {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "child_price", precision = 10, scale = 2)
+    private BigDecimal childPrice; // 6-12歳の子供料金（null の場合は大人料金と同額）
+
     @Column(name = "available_slots", nullable = false)
     private Integer availableSlots;
 

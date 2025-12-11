@@ -193,10 +193,13 @@ export default function FarmDetailClient({ farmId, initialFarm }: FarmDetailClie
                     <Card className="sticky top-24 shadow-xl border-gray-200">
                         <CardHeader>
                             <CardTitle className="text-2xl">
-                                {selectedEvent ? `¥${selectedEvent.price.toLocaleString()}` : '日付を選択'}
-                                <span className="text-base font-normal text-gray-500 ml-1">
-                                    {selectedEvent ? '/人' : ''}
-                                </span>
+                                {selectedEvent ? (
+                                    <div className="space-y-1">
+                                        <div>¥{selectedEvent.price.toLocaleString()} <span className="text-base font-normal text-gray-500">/大人</span></div>
+                                        <div className="text-lg">¥{(selectedEvent.childPrice ?? selectedEvent.price).toLocaleString()} <span className="text-base font-normal text-gray-500">/子供(6-12歳)</span></div>
+                                        <div className="text-sm font-normal text-gray-500">幼児(0-5歳): 無料</div>
+                                    </div>
+                                ) : '日付を選択'}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -265,7 +268,11 @@ export default function FarmDetailClient({ farmId, initialFarm }: FarmDetailClie
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">料金</span>
-                                            <span className="font-medium">¥{selectedEvent.price.toLocaleString()} / 人</span>
+                                            <div className="text-right">
+                                                <div className="font-medium">大人: ¥{selectedEvent.price.toLocaleString()}</div>
+                                                <div className="text-xs text-gray-500">子供(6-12歳): ¥{(selectedEvent.childPrice ?? selectedEvent.price).toLocaleString()}</div>
+                                                <div className="text-xs text-gray-500">幼児(0-5歳): 無料</div>
+                                            </div>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">空き状況</span>

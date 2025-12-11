@@ -106,7 +106,7 @@ export default function FarmCard({ farm, isFavorite = false, onFavoriteChange, a
                     <p className="text-gray-700 text-sm line-clamp-2">{farm.description}</p>
                     <p className="font-medium text-gray-900">
                         {minPrice ? (
-                            <><span className="font-semibold">¥{minPrice.toLocaleString()}～</span> / 1人</>
+                            <><span className="text-sm text-gray-500">大人</span> <span className="font-semibold">¥{minPrice.toLocaleString()}～</span></>
                         ) : (
                             <span className="text-gray-400">価格未設定</span>
                         )}

@@ -14,6 +14,7 @@ public class ExperienceEventDto {
     private LocalDateTime eventDate;
     private Integer capacity;
     private BigDecimal price;
+    private BigDecimal childPrice; // 子供料金（6-12歳）
     private Integer availableSlots;
     private String category;
     private Long farmId; // We send only ID to avoid deep nesting/recursion
@@ -26,6 +27,7 @@ public class ExperienceEventDto {
         dto.setEventDate(event.getEventDate());
         dto.setCapacity(event.getCapacity());
         dto.setPrice(event.getPrice());
+        dto.setChildPrice(event.getChildPrice() != null ? event.getChildPrice() : event.getPrice());
         dto.setAvailableSlots(event.getAvailableSlots());
         dto.setCategory(event.getCategory());
         if (event.getFarm() != null) {

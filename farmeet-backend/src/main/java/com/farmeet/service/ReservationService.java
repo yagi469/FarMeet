@@ -30,26 +30,43 @@ public class ReservationService {
     }
 
     @Transactional
-    public Reservation createReservation(User user, Long eventId, Integer numberOfPeople) {
+    public Reservation createReservation(User user, Long eventId, Integer numberOfAdults, Integer numberOfChildren,
+            Integer numberOfInfants) {
         ExperienceEvent event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        if (event.getAvailableSlots() < numberOfPeople) {
+        int totalPeople = numberOfAdults + numberOfChildren + numberOfInfants;
+        if (event.getAvailableSlots() < totalPeople) {
             throw new RuntimeException("Not enough available slots");
         }
+
+        // 料金計算: 大人料金 × 大人人数 + 子供料金 × 子供人数（幼児は無料）
+        BigDecimal adultPrice = event.getPrice();
+        BigDecimal childPrice = event.getChildPrice() != null ? event.getChildPrice() : event.getPrice();
+        BigDecimal totalPrice = adultPrice.multiply(BigDecimal.valueOf(numberOfAdults))
+                .add(childPrice.multiply(BigDecimal.valueOf(numberOfChildren)));
 
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setEvent(event);
-        reservation.setNumberOfPeople(numberOfPeople);
+        reservation.setNumberOfPeople(totalPeople);
+        reservation.setNumberOfAdults(numberOfAdults);
+        reservation.setNumberOfChildren(numberOfChildren);
+        reservation.setNumberOfInfants(numberOfInfants);
         reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
-        reservation.setTotalPrice(event.getPrice().multiply(BigDecimal.valueOf(numberOfPeople)));
+        reservation.setTotalPrice(totalPrice);
 
         // Update available slots
-        event.setAvailableSlots(event.getAvailableSlots() - numberOfPeople);
+        event.setAvailableSlots(event.getAvailableSlots() - totalPeople);
         eventRepository.save(event);
 
         return reservationRepository.save(reservation);
+    }
+
+    // 後方互換性のためのオーバーロード（既存API用）
+    @Transactional
+    public Reservation createReservation(User user, Long eventId, Integer numberOfPeople) {
+        return createReservation(user, eventId, numberOfPeople, 0, 0);
     }
 
     @Transactional

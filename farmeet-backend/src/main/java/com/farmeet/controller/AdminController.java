@@ -293,6 +293,7 @@ public class AdminController {
                 request.getEventDate(),
                 request.getCapacity(),
                 request.getPrice(),
+                request.getChildPrice(),
                 request.getCategory());
     }
 
@@ -307,6 +308,7 @@ public class AdminController {
                 request.getEventDate(),
                 request.getCapacity(),
                 request.getPrice(),
+                request.getChildPrice(),
                 request.getCategory());
     }
 
@@ -350,6 +352,7 @@ public class AdminController {
         private java.time.LocalDateTime eventDate;
         private Integer capacity;
         private java.math.BigDecimal price;
+        private java.math.BigDecimal childPrice; // 子供料金
         private String category;
 
         // Getters and Setters
@@ -399,6 +402,14 @@ public class AdminController {
 
         public void setPrice(java.math.BigDecimal price) {
             this.price = price;
+        }
+
+        public java.math.BigDecimal getChildPrice() {
+            return childPrice;
+        }
+
+        public void setChildPrice(java.math.BigDecimal childPrice) {
+            this.childPrice = childPrice;
         }
 
         public String getCategory() {
@@ -417,6 +428,7 @@ public class AdminController {
         private java.time.LocalDateTime eventDate;
         private Integer capacity;
         private java.math.BigDecimal price;
+        private java.math.BigDecimal childPrice; // 子供料金
         private String category;
 
         // Getters and Setters
@@ -466,6 +478,14 @@ public class AdminController {
 
         public void setPrice(java.math.BigDecimal price) {
             this.price = price;
+        }
+
+        public java.math.BigDecimal getChildPrice() {
+            return childPrice;
+        }
+
+        public void setChildPrice(java.math.BigDecimal childPrice) {
+            this.childPrice = childPrice;
         }
 
         public String getCategory() {

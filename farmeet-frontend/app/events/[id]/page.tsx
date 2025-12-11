@@ -11,7 +11,9 @@ export default function EventDetailPage() {
     const router = useRouter();
     const pathname = usePathname();
     const [event, setEvent] = useState<ExperienceEvent | null>(null);
-    const [numberOfPeople, setNumberOfPeople] = useState(1);
+    const [numberOfAdults, setNumberOfAdults] = useState(1);
+    const [numberOfChildren, setNumberOfChildren] = useState(0);
+    const [numberOfInfants, setNumberOfInfants] = useState(0);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
@@ -40,13 +42,17 @@ export default function EventDetailPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        if (numberOfAdults + numberOfChildren + numberOfInfants === 0) {
+            setError('参加人数を1名以上選択してください。');
+            return;
+        }
         setShowConfirmation(true);
     };
 
     const confirmReservation = async () => {
         setSubmitting(true);
         try {
-            await api.createReservation(event!.id, numberOfPeople);
+            await api.createReservationWithDetails(event!.id, numberOfAdults, numberOfChildren, numberOfInfants);
             alert('予約が完了しました！');
             router.push('/reservations');
         } catch (err) {
@@ -73,7 +79,9 @@ export default function EventDetailPage() {
         );
     }
 
-    const totalPrice = event.price * numberOfPeople;
+    const totalPeople = numberOfAdults + numberOfChildren + numberOfInfants;
+    const childPrice = event.childPrice ?? event.price;
+    const totalPrice = (event.price * numberOfAdults) + (childPrice * numberOfChildren);
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -96,11 +104,19 @@ export default function EventDetailPage() {
                             残り{event.availableSlots}席 / 定員{event.capacity}名
                         </span>
                     </div>
-                    <div className="flex items-center text-gray-700">
+                    <div className="flex items-start text-gray-700">
                         <span className="font-semibold w-32">料金:</span>
-                        <span className="text-green-600 font-bold">
-                            ¥{event.price.toLocaleString()} / 人
-                        </span>
+                        <div>
+                            <div className="text-green-600 font-bold">
+                                大人(13歳以上): ¥{event.price.toLocaleString()}
+                            </div>
+                            <div className="text-green-600">
+                                子供(6-12歳): ¥{childPrice.toLocaleString()}
+                            </div>
+                            <div className="text-gray-500 text-sm">
+                                幼児(0-5歳): 無料
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -111,24 +127,109 @@ export default function EventDetailPage() {
                 )}
 
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-6">
-                        <label htmlFor="numberOfPeople" className="block text-sm font-medium mb-2">
-                            参加人数
-                        </label>
-                        <input
-                            type="number"
-                            id="numberOfPeople"
-                            min="1"
-                            max={event.availableSlots}
-                            value={numberOfPeople || ''}
-                            onChange={(e) => setNumberOfPeople(Number(e.target.value))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
+                    <div className="space-y-4 mb-6">
+                        {/* 大人 */}
+                        <div className="flex items-center justify-between py-3 border-b">
+                            <div>
+                                <div className="font-medium">大人</div>
+                                <div className="text-sm text-gray-500">13歳以上</div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setNumberOfAdults(Math.max(0, numberOfAdults - 1))}
+                                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+                                    disabled={numberOfAdults === 0}
+                                >
+                                    -
+                                </button>
+                                <span className="w-8 text-center font-semibold">{numberOfAdults}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setNumberOfAdults(Math.min(event.availableSlots - numberOfChildren - numberOfInfants, numberOfAdults + 1))}
+                                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+                                    disabled={totalPeople >= event.availableSlots}
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 子供 */}
+                        <div className="flex items-center justify-between py-3 border-b">
+                            <div>
+                                <div className="font-medium">子供</div>
+                                <div className="text-sm text-gray-500">6歳〜12歳</div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setNumberOfChildren(Math.max(0, numberOfChildren - 1))}
+                                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+                                    disabled={numberOfChildren === 0}
+                                >
+                                    -
+                                </button>
+                                <span className="w-8 text-center font-semibold">{numberOfChildren}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setNumberOfChildren(Math.min(event.availableSlots - numberOfAdults - numberOfInfants, numberOfChildren + 1))}
+                                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+                                    disabled={totalPeople >= event.availableSlots}
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 幼児 */}
+                        <div className="flex items-center justify-between py-3 border-b">
+                            <div>
+                                <div className="font-medium">幼児</div>
+                                <div className="text-sm text-gray-500">0歳〜5歳（無料）</div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setNumberOfInfants(Math.max(0, numberOfInfants - 1))}
+                                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+                                    disabled={numberOfInfants === 0}
+                                >
+                                    -
+                                </button>
+                                <span className="w-8 text-center font-semibold">{numberOfInfants}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setNumberOfInfants(Math.min(event.availableSlots - numberOfAdults - numberOfChildren, numberOfInfants + 1))}
+                                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+                                    disabled={totalPeople >= event.availableSlots}
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="bg-gray-50 p-4 rounded mb-6">
-                        <div className="flex justify-between items-center text-lg font-semibold">
+                    <div className="bg-gray-50 p-4 rounded mb-6 space-y-2">
+                        {numberOfAdults > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span>大人 {numberOfAdults}名 × ¥{event.price.toLocaleString()}</span>
+                                <span>¥{(event.price * numberOfAdults).toLocaleString()}</span>
+                            </div>
+                        )}
+                        {numberOfChildren > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span>子供 {numberOfChildren}名 × ¥{childPrice.toLocaleString()}</span>
+                                <span>¥{(childPrice * numberOfChildren).toLocaleString()}</span>
+                            </div>
+                        )}
+                        {numberOfInfants > 0 && (
+                            <div className="flex justify-between text-sm text-gray-500">
+                                <span>幼児 {numberOfInfants}名</span>
+                                <span>無料</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-center text-lg font-semibold pt-2 border-t">
                             <span>合計金額:</span>
                             <span className="text-green-600">¥{totalPrice.toLocaleString()}</span>
                         </div>
@@ -136,7 +237,7 @@ export default function EventDetailPage() {
 
                     <button
                         type="submit"
-                        disabled={submitting || event.availableSlots === 0}
+                        disabled={submitting || event.availableSlots === 0 || totalPeople === 0}
                         className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700 transition disabled:bg-gray-400"
                     >
                         {submitting ? '予約中...' : '確認画面へ進む'}
@@ -159,7 +260,11 @@ export default function EventDetailPage() {
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">人数</p>
-                                    <p className="font-semibold">{numberOfPeople}名</p>
+                                    <div className="font-semibold">
+                                        {numberOfAdults > 0 && <div>大人: {numberOfAdults}名</div>}
+                                        {numberOfChildren > 0 && <div>子供: {numberOfChildren}名</div>}
+                                        {numberOfInfants > 0 && <div>幼児: {numberOfInfants}名</div>}
+                                    </div>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">合計金額</p>

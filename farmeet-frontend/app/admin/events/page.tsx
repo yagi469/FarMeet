@@ -15,6 +15,7 @@ interface Event {
     eventDate: string;
     capacity: number;
     price: number;
+    childPrice?: number;
     availableSlots: number;
     category: string;
     farmId: number;
@@ -40,6 +41,7 @@ export default function AdminEventsPage() {
         eventDate: '',
         capacity: '10',
         price: '0',
+        childPrice: '',
         category: 'FRUIT'
     });
 
@@ -167,6 +169,7 @@ export default function AdminEventsPage() {
                 eventDate: new Date(formData.eventDate).toISOString(),
                 capacity: parseInt(formData.capacity),
                 price: parseInt(formData.price),
+                childPrice: formData.childPrice ? parseInt(formData.childPrice) : null,
                 category: formData.category
             };
 
@@ -194,6 +197,7 @@ export default function AdminEventsPage() {
             eventDate: '',
             capacity: '10',
             price: '0',
+            childPrice: '',
             category: 'FRUIT'
         });
         setEditingId(null);
@@ -211,6 +215,7 @@ export default function AdminEventsPage() {
             eventDate: dateStr,
             capacity: event.capacity.toString(),
             price: event.price.toString(),
+            childPrice: event.childPrice?.toString() || '',
             category: event.category || 'FRUIT'
         });
         setEditingId(event.id);
@@ -316,14 +321,28 @@ export default function AdminEventsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">料金 (円)</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">大人料金 (13歳以上)</label>
                                             <Input
                                                 type="number"
                                                 required
                                                 min="0"
                                                 value={formData.price}
                                                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                                placeholder="円"
                                             />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">子供料金 (6-12歳)</label>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                value={formData.childPrice}
+                                                onChange={(e) => setFormData({ ...formData, childPrice: e.target.value })}
+                                                placeholder="空欄は大人と同額"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">※幼児(0-5歳)は無料</p>
                                         </div>
                                     </div>
                                     <div>

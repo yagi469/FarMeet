@@ -302,6 +302,22 @@ class ApiClient {
         return response.json();
     }
 
+    async createReservationWithDetails(eventId: number, numberOfAdults: number, numberOfChildren: number, numberOfInfants: number) {
+        const response = await fetch(`${API_BASE_URL}/reservations`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                eventId,
+                numberOfAdults,
+                numberOfChildren,
+                numberOfInfants,
+                numberOfPeople: numberOfAdults + numberOfChildren + numberOfInfants
+            }),
+        });
+        if (!response.ok) throw new Error('Failed to create reservation');
+        return response.json();
+    }
+
     async cancelReservation(id: number) {
         const response = await fetch(`${API_BASE_URL}/reservations/${id}/cancel`, {
             method: 'PUT',
@@ -439,6 +455,7 @@ class ApiClient {
         eventDate: string;
         capacity: number;
         price: number;
+        childPrice?: number | null;
         category: string;
     }) {
         const response = await fetch(`${API_BASE_URL}/admin/events`, {
@@ -457,6 +474,7 @@ class ApiClient {
         eventDate: string;
         capacity: number;
         price: number;
+        childPrice?: number | null;
         category: string;
     }) {
         const response = await fetch(`${API_BASE_URL}/admin/events/${id}`, {

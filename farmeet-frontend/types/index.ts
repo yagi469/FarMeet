@@ -28,6 +28,7 @@ export interface ExperienceEvent {
     eventDate: string;
     capacity: number;
     price: number;
+    childPrice?: number; // 子供料金（6-12歳）
     availableSlots: number;
     createdAt: string;
 }
@@ -37,6 +38,9 @@ export interface Reservation {
     user: User;
     event: ExperienceEvent;
     numberOfPeople: number;
+    numberOfAdults?: number; // 大人人数（13歳以上）
+    numberOfChildren?: number; // 子供人数（6-12歳）
+    numberOfInfants?: number; // 幼児人数（0-5歳、無料）
     status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
     totalPrice: number;
     createdAt: string;

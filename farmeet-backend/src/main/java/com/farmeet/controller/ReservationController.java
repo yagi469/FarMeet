@@ -35,8 +35,20 @@ public class ReservationController {
     public ResponseEntity<Reservation> createReservation(@RequestBody ReservationRequest request,
             @AuthenticationPrincipal User user) {
         try {
-            Reservation reservation = reservationService.createReservation(
-                    user, request.getEventId(), request.getNumberOfPeople());
+            Reservation reservation;
+            // 詳細情報が提供されている場合は詳細メソッドを使用
+            if (request.getNumberOfAdults() != null) {
+                reservation = reservationService.createReservation(
+                        user,
+                        request.getEventId(),
+                        request.getNumberOfAdults(),
+                        request.getNumberOfChildren() != null ? request.getNumberOfChildren() : 0,
+                        request.getNumberOfInfants() != null ? request.getNumberOfInfants() : 0);
+            } else {
+                // 後方互換性: numberOfPeopleのみの場合
+                reservation = reservationService.createReservation(
+                        user, request.getEventId(), request.getNumberOfPeople());
+            }
             return ResponseEntity.ok(reservation);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();

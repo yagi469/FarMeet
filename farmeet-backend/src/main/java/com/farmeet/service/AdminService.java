@@ -270,7 +270,8 @@ public class AdminService {
     }
 
     public com.farmeet.entity.ExperienceEvent createEventByAdmin(Long farmId, String title, String description,
-            java.time.LocalDateTime eventDate, Integer capacity, java.math.BigDecimal price, String category) {
+            java.time.LocalDateTime eventDate, Integer capacity, java.math.BigDecimal price,
+            java.math.BigDecimal childPrice, String category) {
         Farm farm = farmRepository.findById(farmId)
                 .orElseThrow(() -> new ResourceNotFoundException("Farm not found with id: " + farmId));
 
@@ -282,13 +283,15 @@ public class AdminService {
         event.setCapacity(capacity);
         event.setAvailableSlots(capacity); // Default to capacity
         event.setPrice(price);
+        event.setChildPrice(childPrice); // 子供料金
         event.setCategory(category);
 
         return experienceEventRepository.save(event);
     }
 
     public com.farmeet.entity.ExperienceEvent updateEventByAdmin(Long id, Long farmId, String title, String description,
-            java.time.LocalDateTime eventDate, Integer capacity, java.math.BigDecimal price, String category) {
+            java.time.LocalDateTime eventDate, Integer capacity, java.math.BigDecimal price,
+            java.math.BigDecimal childPrice, String category) {
         com.farmeet.entity.ExperienceEvent event = experienceEventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + id));
 
@@ -308,6 +311,7 @@ public class AdminService {
         }
         if (price != null)
             event.setPrice(price);
+        event.setChildPrice(childPrice); // nullも許容（大人と同額になる）
         if (category != null)
             event.setCategory(category);
 
