@@ -1,20 +1,26 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 
 export default function Header() {
     const { isAuthenticated, isLoading, user, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const pathname = usePathname();
 
     const handleLogout = () => {
         logout();
         setIsMenuOpen(false);
     };
 
+    // Hide header on admin pages on mobile (they have their own header)
+    // On desktop, keep it visible
+    const isAdminPage = pathname?.startsWith('/admin');
+
     return (
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+        <header className={`sticky top-0 z-50 bg-white border-b border-gray-200 ${isAdminPage ? 'hidden md:block' : ''}`}>
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-20">
                     {/* Logo */}
