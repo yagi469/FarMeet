@@ -1,16 +1,53 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Farm } from '@/types';
 import { useState } from 'react';
+import { api } from '@/lib/api';
+import { authHelper } from '@/lib/auth';
 
 interface FarmCardProps {
     farm: Farm;
+    isFavorite?: boolean;
+    onFavoriteChange?: (farmId: number, isFavorite: boolean) => void;
 }
 
-export default function FarmCard({ farm }: FarmCardProps) {
-    const [isFavorite, setIsFavorite] = useState(false);
+export default function FarmCard({ farm, isFavorite = false, onFavoriteChange }: FarmCardProps) {
+    const router = useRouter();
+    const [favorite, setFavorite] = useState(isFavorite);
+    const [isLoading, setIsLoading] = useState(false);
     const [imageError, setImageError] = useState(false);
+
+    const handleFavoriteClick = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Check if user is logged in
+        if (!authHelper.isAuthenticated()) {
+            router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+            return;
+        }
+
+        if (isLoading) return;
+
+        setIsLoading(true);
+        try {
+            if (favorite) {
+                await api.removeFavorite(farm.id);
+                setFavorite(false);
+                onFavoriteChange?.(farm.id, false);
+            } else {
+                await api.addFavorite(farm.id);
+                setFavorite(true);
+                onFavoriteChange?.(farm.id, true);
+            }
+        } catch (error) {
+            console.error('Failed to toggle favorite:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <Link href={`/farms/${farm.id}`} target="_blank" rel="noopener noreferrer">
@@ -31,17 +68,15 @@ export default function FarmCard({ farm }: FarmCardProps) {
                         </div>
                     )}
                     <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            setIsFavorite(!isFavorite);
-                        }}
-                        className="absolute top-3 right-3 p-2 hover:scale-110 transition-transform"
+                        onClick={handleFavoriteClick}
+                        disabled={isLoading}
+                        className={`absolute top-3 right-3 p-2 hover:scale-110 transition-transform ${isLoading ? 'opacity-50' : ''}`}
                     >
                         <svg
-                            className={`w-6 h-6 ${isFavorite
+                            className={`w-6 h-6 ${favorite
                                 ? 'fill-red-500 stroke-red-500'
-                                : 'fill-none stroke-white'
-                                } drop-shadow-md`}
+                                : 'fill-black/30 stroke-white'
+                                } drop-shadow-md transition-colors`}
                             strokeWidth="2"
                             viewBox="0 0 24 24"
                         >
@@ -69,3 +104,4 @@ export default function FarmCard({ farm }: FarmCardProps) {
         </Link>
     );
 }
+

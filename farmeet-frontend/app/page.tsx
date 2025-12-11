@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { authHelper } from '@/lib/auth';
 import { Farm } from '@/types';
 import FarmCard from '@/components/FarmCard';
 import SearchBar from '@/components/SearchBar';
@@ -18,6 +19,7 @@ export default function Home() {
   const [adults, setAdults] = useState(0);
   const [children, setChildren] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadFarms();
@@ -27,11 +29,37 @@ export default function Home() {
     try {
       const data = await api.getFarms();
       setFarms(data);
+      // Load favorite status if user is logged in
+      await loadFavoriteStatus(data.map((f: Farm) => f.id));
     } catch (error) {
       console.error('農園の読み込みに失敗しました:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadFavoriteStatus = async (farmIds: number[]) => {
+    if (!authHelper.isAuthenticated() || farmIds.length === 0) {
+      return;
+    }
+    try {
+      const ids = await api.checkFavorites(farmIds);
+      setFavoriteIds(new Set(ids));
+    } catch (error) {
+      console.error('お気に入り状態の取得に失敗しました:', error);
+    }
+  };
+
+  const handleFavoriteChange = (farmId: number, isFavorite: boolean) => {
+    setFavoriteIds(prev => {
+      const newSet = new Set(prev);
+      if (isFavorite) {
+        newSet.add(farmId);
+      } else {
+        newSet.delete(farmId);
+      }
+      return newSet;
+    });
   };
 
   const handleSearch = async (keyword: string) => {
@@ -72,6 +100,8 @@ export default function Home() {
         category || undefined
       );
       setFarms(data);
+      // Reload favorite status for new farms
+      await loadFavoriteStatus(data.map((f: Farm) => f.id));
     } catch (error) {
       console.error('検索に失敗しました:', error);
     } finally {
@@ -172,7 +202,12 @@ export default function Home() {
           <h2 className="text-2xl font-semibold mb-6 text-gray-900">おすすめの農園</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
             {farms.map((farm) => (
-              <FarmCard key={farm.id} farm={farm} />
+              <FarmCard
+                key={farm.id}
+                farm={farm}
+                isFavorite={favoriteIds.has(farm.id)}
+                onFavoriteChange={handleFavoriteChange}
+              />
             ))}
           </div>
         </>
@@ -180,3 +215,4 @@ export default function Home() {
     </div>
   );
 }
+

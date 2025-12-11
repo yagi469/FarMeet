@@ -608,6 +608,45 @@ class ApiClient {
     removeToken() {
         removeToken();
     }
+
+    // ========== Favorites ==========
+
+    async getFavorites(): Promise<{ id: number; name: string; location: string; imageUrl: string }[]> {
+        const response = await fetch(`${API_BASE_URL}/favorites`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to fetch favorites');
+        return response.json();
+    }
+
+    async addFavorite(farmId: number): Promise<void> {
+        const response = await fetch(`${API_BASE_URL}/favorites/${farmId}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to add favorite');
+    }
+
+    async removeFavorite(farmId: number): Promise<void> {
+        const response = await fetch(`${API_BASE_URL}/favorites/${farmId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to remove favorite');
+    }
+
+    async checkFavorites(farmIds: number[]): Promise<number[]> {
+        const params = farmIds.map(id => `farmIds=${id}`).join('&');
+        const response = await fetch(`${API_BASE_URL}/favorites/check?${params}`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+            // If not authenticated, return empty array
+            return [];
+        }
+        const data = await response.json();
+        return data.favoriteIds || [];
+    }
 }
 
 export const api = new ApiClient();
