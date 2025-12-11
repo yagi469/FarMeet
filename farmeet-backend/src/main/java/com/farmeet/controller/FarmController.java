@@ -52,8 +52,10 @@ public class FarmController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) Integer guests,
-            @RequestParam(required = false) String category) {
-        List<FarmDto> farms = farmService.searchFarms(keyword, location, date, guests, category);
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice) {
+        List<FarmDto> farms = farmService.searchFarms(keyword, location, date, guests, category, minPrice, maxPrice);
         return ResponseEntity.ok(farms);
     }
 

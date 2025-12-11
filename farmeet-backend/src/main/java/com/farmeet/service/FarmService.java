@@ -76,9 +76,9 @@ public class FarmService {
         farmRepository.delete(farm);
     }
 
-    // 検索機能（キーワード、地域、日程、人数、カテゴリで絞り込み）
+    // 検索機能（キーワード、地域、日程、人数、カテゴリ、価格で絞り込み）
     public List<com.farmeet.dto.FarmDto> searchFarms(String keyword, String location, LocalDate date, Integer guests,
-            String category) {
+            String category, Integer minPrice, Integer maxPrice) {
         List<Farm> farms;
         int totalGuests = guests != null ? guests : 0;
         boolean hasCategory = category != null && !category.isEmpty();
@@ -132,6 +132,30 @@ public class FarmService {
         if (location != null && !location.isEmpty()) {
             farms = farms.stream()
                     .filter(farm -> farm.getLocation().contains(location))
+                    .collect(Collectors.toList());
+        }
+
+        // 価格で絞り込み（そのFarmのイベントの最安値が価格範囲内か）
+        if (minPrice != null || maxPrice != null) {
+            final Integer min = minPrice;
+            final Integer max = maxPrice;
+            farms = farms.stream()
+                    .filter(farm -> {
+                        List<ExperienceEvent> farmEvents = eventRepository.findByFarmIdAndEventDateAfter(
+                                farm.getId(), LocalDateTime.now());
+                        if (farmEvents.isEmpty())
+                            return false;
+
+                        // 最安値を取得
+                        int lowestPrice = farmEvents.stream()
+                                .mapToInt(e -> e.getPrice().intValue())
+                                .min()
+                                .orElse(0);
+
+                        boolean matchesMin = min == null || lowestPrice >= min;
+                        boolean matchesMax = max == null || lowestPrice <= max;
+                        return matchesMin && matchesMax;
+                    })
                     .collect(Collectors.toList());
         }
 

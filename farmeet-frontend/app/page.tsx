@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import { authHelper } from '@/lib/auth';
+import { getRecentlyViewed, RecentlyViewedItem } from '@/lib/recentlyViewed';
 import { Farm } from '@/types';
 import FarmCard from '@/components/FarmCard';
 import SearchBar from '@/components/SearchBar';
@@ -21,9 +23,13 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [ratingsMap, setRatingsMap] = useState<Map<number, { avgRating: number; count: number }>>(new Map());
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
+  const [priceRange, setPriceRange] = useState<{ min?: number; max?: number }>({});
 
   useEffect(() => {
     loadFarms();
+    // 最近見た農園を読み込み
+    setRecentlyViewed(getRecentlyViewed());
   }, []);
 
   const loadFarms = async () => {
@@ -78,31 +84,40 @@ export default function Home() {
 
   const handleSearch = async (keyword: string) => {
     setSearchKeyword(keyword);
-    await performSearch(keyword, selectedLocation, selectedDate, adults, children, selectedCategory);
+    await performSearch(keyword, selectedLocation, selectedDate, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
   const handleLocationChange = async (location: string) => {
     setSelectedLocation(location);
-    await performSearch(searchKeyword, location, selectedDate, adults, children, selectedCategory);
+    await performSearch(searchKeyword, location, selectedDate, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
   const handleDateChange = async (date: string) => {
     setSelectedDate(date);
-    await performSearch(searchKeyword, selectedLocation, date, adults, children, selectedCategory);
+    await performSearch(searchKeyword, selectedLocation, date, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
   const handleGuestsChange = async (newAdults: number, newChildren: number) => {
     setAdults(newAdults);
     setChildren(newChildren);
-    await performSearch(searchKeyword, selectedLocation, selectedDate, newAdults, newChildren, selectedCategory);
+    await performSearch(searchKeyword, selectedLocation, selectedDate, newAdults, newChildren, selectedCategory, priceRange.min, priceRange.max);
   };
+
+
+
+
 
   const handleCategoryChange = async (category: string) => {
     setSelectedCategory(category);
-    await performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, category);
+    await performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, category, priceRange.min, priceRange.max);
   };
 
-  const performSearch = async (keyword: string, location: string, date: string, adultsCount: number, childrenCount: number, category: string) => {
+  const handlePriceChange = async (min?: number, max?: number) => {
+    setPriceRange({ min, max });
+    await performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, selectedCategory, min, max);
+  };
+
+  const performSearch = async (keyword: string, location: string, date: string, adultsCount: number, childrenCount: number, category: string, minPrice?: number, maxPrice?: number) => {
     setLoading(true);
     try {
       const totalGuests = adultsCount + childrenCount;
@@ -111,7 +126,9 @@ export default function Home() {
         location || undefined,
         date || undefined,
         totalGuests > 0 ? totalGuests : undefined,
-        category || undefined
+        category || undefined,
+        minPrice,
+        maxPrice
       );
       setFarms(data);
       const farmIds = data.map((f: Farm) => f.id);
@@ -158,13 +175,35 @@ export default function Home() {
             />
           </div>
           <div className="hidden md:block w-px h-8 bg-gray-300" />
-          <div className="flex-1 px-4 py-2 md:py-0 mb-4 md:mb-0">
+          <div className="flex-1 px-4 py-2 md:py-0 border-b md:border-b-0 border-gray-100">
             <label className="text-xs font-bold text-gray-800 block mb-1">人数</label>
             <GuestSelector
               onGuestsChange={handleGuestsChange}
               adults={adults}
               children={children}
             />
+          </div>
+          <div className="hidden md:block w-px h-8 bg-gray-300" />
+          <div className="flex-1 px-4 py-2 md:py-0 mb-4 md:mb-0">
+            <label className="text-xs font-bold text-gray-800 block mb-1">価格帯</label>
+            <select
+              value={priceRange.max === undefined ? '' : `${priceRange.min || 0}-${priceRange.max}`}
+              onChange={(e) => {
+                if (e.target.value === '') {
+                  handlePriceChange(undefined, undefined);
+                } else {
+                  const [min, max] = e.target.value.split('-').map(Number);
+                  handlePriceChange(min, max);
+                }
+              }}
+              className="w-full text-sm text-gray-600 bg-transparent focus:outline-none cursor-pointer"
+            >
+              <option value="">指定なし</option>
+              <option value="0-1000">〜¥1,000</option>
+              <option value="0-3000">〜¥3,000</option>
+              <option value="0-5000">〜¥5,000</option>
+              <option value="5000-999999">¥5,000〜</option>
+            </select>
           </div>
           <button className="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 md:p-4 w-full md:w-auto flex justify-center items-center transition-colors shadow-md">
             <span className="md:hidden font-bold mr-2">検索</span>
@@ -208,6 +247,40 @@ export default function Home() {
           <span className="text-xs font-medium whitespace-nowrap">花摽み</span>
         </button>
       </div>
+
+      {/* 最近見た農園 */}
+      {recentlyViewed.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">🕒 最近見た農園</h2>
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {recentlyViewed.map((item) => (
+              <Link
+                key={item.id}
+                href={`/farms/${item.id}`}
+                className="flex-shrink-0 w-48 group"
+              >
+                <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-2">
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
+                      <span className="text-4xl">🌾</span>
+                    </div>
+                  )}
+                </div>
+                <h3 className="font-medium text-gray-900 truncate group-hover:text-green-600 transition-colors">
+                  {item.name}
+                </h3>
+                <p className="text-sm text-gray-500 truncate">{item.location}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 農園一覧 */}
       {farms.length === 0 ? (

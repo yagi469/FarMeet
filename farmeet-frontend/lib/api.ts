@@ -162,13 +162,15 @@ class ApiClient {
         return response.json();
     }
 
-    async searchFarms(keyword?: string, location?: string, date?: string, guests?: number, category?: string) {
+    async searchFarms(keyword?: string, location?: string, date?: string, guests?: number, category?: string, minPrice?: number, maxPrice?: number) {
         const params = new URLSearchParams();
         if (keyword) params.append('keyword', keyword);
         if (location) params.append('location', location);
         if (date) params.append('date', date);
         if (guests && guests > 0) params.append('guests', guests.toString());
         if (category) params.append('category', category);
+        if (minPrice !== undefined) params.append('minPrice', minPrice.toString());
+        if (maxPrice !== undefined) params.append('maxPrice', maxPrice.toString());
 
         const response = await fetch(
             `${API_BASE_URL}/farms/search?${params.toString()}`,

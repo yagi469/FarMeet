@@ -53,4 +53,9 @@ public interface ExperienceEventRepository extends JpaRepository<ExperienceEvent
                         @Param("end") LocalDateTime end,
                         @Param("category") String category,
                         @Param("minSlots") int minSlots);
+
+        // 農園IDと日時で未来のイベントを検索（価格フィルター用）
+        @Query("SELECT e FROM ExperienceEvent e WHERE e.farm.id = :farmId AND e.eventDate > :now")
+        List<ExperienceEvent> findByFarmIdAndEventDateAfter(@Param("farmId") Long farmId,
+                        @Param("now") LocalDateTime now);
 }

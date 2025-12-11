@@ -28,6 +28,7 @@ export default function FarmerReservationsPage() {
         PENDING: { label: '保留中', color: 'bg-yellow-100 text-yellow-800' },
         CONFIRMED: { label: '確定', color: 'bg-green-100 text-green-800' },
         CANCELLED: { label: 'キャンセル', color: 'bg-red-100 text-red-800' },
+        COMPLETED: { label: '体験済み', color: 'bg-blue-100 text-blue-800' },
     };
 
     if (loading) {

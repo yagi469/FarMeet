@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { authHelper } from '@/lib/auth';
+import { addToRecentlyViewed } from '@/lib/recentlyViewed';
 import { Farm, ExperienceEvent } from '@/types';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar"; // Assuming shadcn/ui calendar exists
@@ -44,6 +45,14 @@ export default function FarmDetailPage() {
             ]);
             setFarm(farmData);
             setEvents(eventsData);
+
+            // 閲覧履歴に追加
+            addToRecentlyViewed({
+                id: farmData.id,
+                name: farmData.name,
+                imageUrl: farmData.imageUrl,
+                location: farmData.location,
+            });
         } catch (error) {
             console.error('データ読み込みエラー:', error);
         } finally {
