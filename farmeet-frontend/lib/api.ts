@@ -902,6 +902,7 @@ class ApiClient {
         id: number;
         userId: number;
         username: string;
+        category: 'ADULT' | 'CHILD' | 'INFANT';
         joinedAt: string;
     }[]> {
         const response = await fetch(`${API_BASE_URL}/reservations/${reservationId}/participants`, {
