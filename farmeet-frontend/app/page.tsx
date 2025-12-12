@@ -13,6 +13,7 @@ import DatePicker from '@/components/DatePicker';
 import GuestSelector from '@/components/GuestSelector';
 import SeasonCalendar from '@/components/SeasonCalendar';
 import FarmMapView from '@/components/FarmMapView';
+import RecommendedFarms from '@/components/RecommendedFarms';
 import { ProduceItem } from '@/lib/seasonData';
 
 export default function Home() {
@@ -320,6 +321,18 @@ export default function Home() {
         </div>
       )}
 
+      {/* おすすめ農園 - 検索していないときのみ表示 */}
+      {!isSearched && farms.length > 0 && (
+        <RecommendedFarms
+          allFarms={farms}
+          recentlyViewed={recentlyViewed}
+          favoriteIds={favoriteIds}
+          ratingsMap={ratingsMap}
+          pricesMap={pricesMap}
+          onFavoriteChange={handleFavoriteChange}
+        />
+      )}
+
       {/* 農園一覧 */}
       {farms.length === 0 ? (
         <div className="text-center py-24">
@@ -330,7 +343,7 @@ export default function Home() {
           {/* タイトルと表示切替タブ */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <h2 className="text-2xl font-semibold text-gray-900">
-              {isSearched ? `検索結果（${farms.length}件）` : 'おすすめの農園'}
+              {isSearched ? `検索結果（${farms.length}件）` : 'すべての農園'}
             </h2>
 
             {/* リスト/マップ切り替えタブ - 強調デザイン */}
@@ -340,8 +353,8 @@ export default function Home() {
                 <button
                   onClick={() => setViewMode('list')}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all ${viewMode === 'list'
-                      ? 'bg-white shadow-md text-gray-900 font-medium'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    ? 'bg-white shadow-md text-gray-900 font-medium'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -352,8 +365,8 @@ export default function Home() {
                 <button
                   onClick={() => setViewMode('map')}
                   className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all ${viewMode === 'map'
-                      ? 'bg-green-600 shadow-md text-white font-medium'
-                      : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
+                    ? 'bg-green-600 shadow-md text-white font-medium'
+                    : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
                     }`}
                 >
                   {/* NEWバッジ */}
