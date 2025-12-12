@@ -191,7 +191,7 @@ export default function ChatWidget() {
             {isOpen && (
                 <div className="fixed z-50 flex flex-col overflow-hidden bg-white shadow-2xl border border-gray-200 animate-fade-in-up bottom-24 right-4 left-4 h-[70vh] max-h-[500px] rounded-2xl sm:left-auto sm:w-[380px]">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 text-white shrink-0">
+                    <div className="bg-green-600 px-4 py-4 text-white shrink-0">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 shrink-0">
