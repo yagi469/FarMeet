@@ -735,6 +735,98 @@ class ApiClient {
         }
         return ratingsMap;
     }
+
+    // ========== Payments ==========
+
+    async getPaymentMethods(): Promise<Record<string, { enabled: boolean; name: string }>> {
+        const response = await fetch(`${API_BASE_URL}/payments/methods`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get payment methods');
+        return response.json();
+    }
+
+    async getPaymentByReservation(reservationId: number) {
+        const response = await fetch(`${API_BASE_URL}/payments/reservation/${reservationId}`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) return null;
+        return response.json();
+    }
+
+    async createStripeCheckoutSession(reservationId: number): Promise<{ url: string }> {
+        const response = await fetch(`${API_BASE_URL}/payments/stripe/create-checkout-session`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ reservationId }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Stripe決済の開始に失敗しました');
+        }
+        return response.json();
+    }
+
+    async confirmStripePayment(sessionId: string): Promise<{ success: boolean }> {
+        const response = await fetch(`${API_BASE_URL}/payments/stripe/success?session_id=${sessionId}`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Stripe決済の確認に失敗しました');
+        return response.json();
+    }
+
+    async createPayPayPayment(reservationId: number): Promise<{ url: string }> {
+        const response = await fetch(`${API_BASE_URL}/payments/paypay/create-payment`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ reservationId }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'PayPay決済の開始に失敗しました');
+        }
+        return response.json();
+    }
+
+    async completePayPayPayment(reservationId: number): Promise<{ success: boolean }> {
+        const response = await fetch(`${API_BASE_URL}/payments/paypay/complete`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ reservationId }),
+        });
+        if (!response.ok) throw new Error('PayPay決済の完了に失敗しました');
+        return response.json();
+    }
+
+    async initiateBankTransfer(reservationId: number) {
+        const response = await fetch(`${API_BASE_URL}/payments/bank-transfer/initiate`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ reservationId }),
+        });
+        if (!response.ok) throw new Error('銀行振込の開始に失敗しました');
+        return response.json();
+    }
+
+    async getRefundRate(reservationId: number): Promise<{ refundPercentage: number }> {
+        const response = await fetch(`${API_BASE_URL}/payments/${reservationId}/refund-rate`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('返金率の取得に失敗しました');
+        return response.json();
+    }
+
+    async requestRefund(reservationId: number): Promise<{ success: boolean; refundedAmount: number }> {
+        const response = await fetch(`${API_BASE_URL}/payments/${reservationId}/refund`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || '返金リクエストに失敗しました');
+        }
+        return response.json();
+    }
 }
 
 export const api = new ApiClient();

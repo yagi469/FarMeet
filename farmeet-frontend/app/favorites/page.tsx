@@ -30,11 +30,11 @@ export default function FavoritesPage() {
 
             // レビュー情報と最安価格を取得
             if (data.length > 0) {
-                const farmIds = data.map((f: Farm) => f.id);
+                const farmIds = data.map((f) => f.id);
 
                 // 各農園のレビュー情報を取得
                 const ratingsData: Record<number, { averageRating: number; reviewCount: number }> = {};
-                for (const farm of data as Farm[]) {
+                for (const farm of data) {
                     try {
                         const reviewData = await api.getReviews(farm.id);
                         ratingsData[farm.id] = {

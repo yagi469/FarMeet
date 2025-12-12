@@ -1,16 +1,21 @@
 package com.farmeet.service;
 
 import com.farmeet.entity.ExperienceEvent;
+import com.farmeet.entity.Payment;
+import com.farmeet.entity.PaymentStatus;
 import com.farmeet.entity.Reservation;
 import com.farmeet.entity.User;
 import com.farmeet.repository.ExperienceEventRepository;
+import com.farmeet.repository.PaymentRepository;
 import com.farmeet.repository.ReservationRepository;
+import com.stripe.exception.StripeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReservationService {
@@ -21,8 +26,14 @@ public class ReservationService {
     @Autowired
     private ExperienceEventRepository eventRepository;
 
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private PaymentService paymentService;
+
     public List<Reservation> getUserReservations(Long userId) {
-        return reservationRepository.findByUserId(userId);
+        return reservationRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     public List<Reservation> getFarmerReservations(Long farmerId) {
@@ -66,7 +77,7 @@ public class ReservationService {
         reservation.setNumberOfAdults(numberOfAdults);
         reservation.setNumberOfChildren(numberOfChildren);
         reservation.setNumberOfInfants(numberOfInfants);
-        reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
+        reservation.setStatus(Reservation.ReservationStatus.PENDING_PAYMENT);
         reservation.setTotalPrice(totalPrice);
 
         // Update available slots
@@ -93,6 +104,19 @@ public class ReservationService {
 
         if (reservation.getStatus() == Reservation.ReservationStatus.CANCELLED) {
             throw new RuntimeException("Reservation already cancelled");
+        }
+
+        // 決済が完了している場合は返金処理を実行
+        Optional<Payment> paymentOpt = paymentRepository.findByReservationId(reservationId);
+        if (paymentOpt.isPresent()) {
+            Payment payment = paymentOpt.get();
+            if (payment.getPaymentStatus() == PaymentStatus.COMPLETED) {
+                try {
+                    paymentService.processRefund(reservationId);
+                } catch (StripeException e) {
+                    throw new RuntimeException("返金処理に失敗しました: " + e.getMessage());
+                }
+            }
         }
 
         reservation.setStatus(Reservation.ReservationStatus.CANCELLED);

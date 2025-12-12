@@ -7,11 +7,19 @@ import { api } from '@/lib/api';
 import { authHelper } from '@/lib/auth';
 import { Reservation } from '@/types';
 
+interface PaymentInfo {
+    id: number;
+    paymentMethod: string;
+    paymentStatus: string;
+    transferDeadline?: string;
+}
+
 export default function ReservationDetailPage() {
     const params = useParams();
     const router = useRouter();
     const pathname = usePathname();
     const [reservation, setReservation] = useState<Reservation | null>(null);
+    const [payment, setPayment] = useState<PaymentInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +36,14 @@ export default function ReservationDetailPage() {
             const data = await api.getReservationById(Number(params.id));
             setReservation(data);
             setError(null);
+
+            // 決済情報を取得
+            try {
+                const paymentData = await api.getPaymentByReservation(Number(params.id));
+                setPayment(paymentData);
+            } catch {
+                // 決済情報がない場合は無視
+            }
         } catch (err) {
             console.error('予約読み込みエラー:', err);
             setError('予約の読み込みに失敗しました');
@@ -47,6 +63,15 @@ export default function ReservationDetailPage() {
         } catch (error) {
             alert('キャンセルに失敗しました');
         }
+    };
+
+    const getPaymentMethodLabel = (method: string) => {
+        const labels: Record<string, string> = {
+            STRIPE: 'クレジットカード',
+            PAYPAY: 'PayPay',
+            BANK_TRANSFER: '銀行振込',
+        };
+        return labels[method] || method;
     };
 
     if (loading) {
@@ -77,12 +102,18 @@ export default function ReservationDetailPage() {
         const styles: Record<string, string> = {
             CONFIRMED: 'bg-green-100 text-green-800',
             PENDING: 'bg-yellow-100 text-yellow-800',
+            PENDING_PAYMENT: 'bg-orange-100 text-orange-800',
+            AWAITING_TRANSFER: 'bg-blue-100 text-blue-800',
+            PAYMENT_FAILED: 'bg-red-100 text-red-800',
             CANCELLED: 'bg-gray-100 text-gray-800',
             COMPLETED: 'bg-blue-100 text-blue-800',
         };
         const labels: Record<string, string> = {
             CONFIRMED: '確定',
             PENDING: '保留中',
+            PENDING_PAYMENT: '決済待ち',
+            AWAITING_TRANSFER: '振込待ち',
+            PAYMENT_FAILED: '決済失敗',
             CANCELLED: 'キャンセル済み',
             COMPLETED: '完了',
         };
@@ -120,7 +151,14 @@ export default function ReservationDetailPage() {
                 {/* ステータスバナー */}
                 <div className="bg-gray-50 px-6 py-4 border-b flex items-center justify-between">
                     <span className="text-sm text-gray-500">予約番号: #{reservation.id}</span>
-                    {getStatusBadge(reservation.status)}
+                    <div className="flex items-center gap-3">
+                        {payment && (
+                            <span className="text-sm text-gray-600 bg-gray-200 px-3 py-1 rounded-full">
+                                {getPaymentMethodLabel(payment.paymentMethod)}
+                            </span>
+                        )}
+                        {getStatusBadge(reservation.status)}
+                    </div>
                 </div>
 
                 {/* イベント情報 */}
@@ -195,6 +233,26 @@ export default function ReservationDetailPage() {
                         </div>
                     </div>
 
+                    {/* 決済方法 */}
+                    {payment && (
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">お支払い方法</p>
+                                <p className="font-semibold">{getPaymentMethodLabel(payment.paymentMethod)}</p>
+                                {payment.transferDeadline && reservation.status === 'AWAITING_TRANSFER' && (
+                                    <p className="text-sm text-orange-600 mt-1">
+                                        振込期限: {new Date(payment.transferDeadline).toLocaleDateString('ja-JP')}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* 料金明細 */}
                     <div className="bg-gray-50 rounded-lg p-4">
                         <p className="text-sm text-gray-500 mb-3">料金明細</p>
@@ -238,6 +296,22 @@ export default function ReservationDetailPage() {
                     >
                         農園ページを見る
                     </Link>
+                    {(reservation.status === 'PENDING_PAYMENT' || reservation.status === 'PAYMENT_FAILED') && (
+                        <Link
+                            href={`/payment?reservationId=${reservation.id}`}
+                            className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg text-center hover:bg-green-700 transition font-medium"
+                        >
+                            支払いに進む
+                        </Link>
+                    )}
+                    {reservation.status === 'AWAITING_TRANSFER' && (
+                        <Link
+                            href={`/payment/bank-transfer?reservationId=${reservation.id}`}
+                            className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg text-center hover:bg-blue-700 transition font-medium"
+                        >
+                            振込情報を確認
+                        </Link>
+                    )}
                     {reservation.status === 'CONFIRMED' && (
                         <button
                             onClick={handleCancel}

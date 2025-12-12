@@ -6,10 +6,17 @@ import { api } from '@/lib/api';
 import { authHelper } from '@/lib/auth';
 import { Reservation } from '@/types';
 
+interface PaymentInfo {
+    id: number;
+    paymentMethod: string;
+    paymentStatus: string;
+}
+
 export default function ReservationsPage() {
     const router = useRouter();
     const pathname = usePathname();
     const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [payments, setPayments] = useState<Record<number, PaymentInfo>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +33,20 @@ export default function ReservationsPage() {
             const data = await api.getReservations();
             setReservations(data);
             setError(null);
+
+            // 各予約の決済情報を取得
+            const paymentData: Record<number, PaymentInfo> = {};
+            for (const res of data) {
+                try {
+                    const payment = await api.getPaymentByReservation(res.id);
+                    if (payment) {
+                        paymentData[res.id] = payment;
+                    }
+                } catch {
+                    // 決済情報がない場合は無視
+                }
+            }
+            setPayments(paymentData);
         } catch (err) {
             console.error('予約読み込みエラー:', err);
             setError('予約の読み込みに失敗しました');
@@ -49,6 +70,15 @@ export default function ReservationsPage() {
         }
     };
 
+    const getPaymentMethodLabel = (method: string) => {
+        const labels: Record<string, string> = {
+            STRIPE: 'クレジットカード',
+            PAYPAY: 'PayPay',
+            BANK_TRANSFER: '銀行振込',
+        };
+        return labels[method] || method;
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[400px]">
@@ -58,19 +88,27 @@ export default function ReservationsPage() {
     }
 
     const getStatusBadge = (status: string) => {
-        const styles = {
+        const styles: Record<string, string> = {
             CONFIRMED: 'bg-green-100 text-green-800',
             PENDING: 'bg-yellow-100 text-yellow-800',
+            PENDING_PAYMENT: 'bg-orange-100 text-orange-800',
+            AWAITING_TRANSFER: 'bg-blue-100 text-blue-800',
+            PAYMENT_FAILED: 'bg-red-100 text-red-800',
             CANCELLED: 'bg-gray-100 text-gray-800',
+            COMPLETED: 'bg-blue-100 text-blue-800',
         };
-        const labels = {
+        const labels: Record<string, string> = {
             CONFIRMED: '確定',
             PENDING: '保留中',
+            PENDING_PAYMENT: '決済待ち',
+            AWAITING_TRANSFER: '振込待ち',
+            PAYMENT_FAILED: '決済失敗',
             CANCELLED: 'キャンセル済み',
+            COMPLETED: '完了',
         };
         return (
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${styles[status as keyof typeof styles]}`}>
-                {labels[status as keyof typeof labels]}
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${styles[status] || 'bg-gray-100'}`}>
+                {labels[status] || status}
             </span>
         );
     };
@@ -120,7 +158,14 @@ export default function ReservationsPage() {
                                     </h2>
                                     <p className="text-gray-600">{reservation.event.farm.name}</p>
                                 </div>
-                                {getStatusBadge(reservation.status)}
+                                <div className="flex flex-col items-end gap-2">
+                                    {getStatusBadge(reservation.status)}
+                                    {payments[reservation.id] && (
+                                        <span className="text-xs text-gray-500">
+                                            {getPaymentMethodLabel(payments[reservation.id].paymentMethod)}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

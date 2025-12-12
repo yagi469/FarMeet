@@ -41,10 +41,13 @@ public class Reservation {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ReservationStatus status = ReservationStatus.PENDING;
+    private ReservationStatus status = ReservationStatus.PENDING_PAYMENT;
 
     @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
+
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Payment payment;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -55,6 +58,19 @@ public class Reservation {
     }
 
     public enum ReservationStatus {
-        PENDING, CONFIRMED, CANCELLED, COMPLETED
+        /** 決済待ち（予約作成直後） */
+        PENDING_PAYMENT,
+        /** 銀行振込待ち */
+        AWAITING_TRANSFER,
+        /** 決済失敗 */
+        PAYMENT_FAILED,
+        /** 確定済み（決済完了） */
+        CONFIRMED,
+        /** キャンセル済み */
+        CANCELLED,
+        /** 完了（イベント終了後） */
+        COMPLETED,
+        /** 旧ステータス（後方互換性のため保持） */
+        PENDING
     }
 }

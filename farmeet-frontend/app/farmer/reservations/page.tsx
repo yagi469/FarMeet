@@ -24,10 +24,13 @@ export default function FarmerReservationsPage() {
         }
     };
 
-    const statusLabels = {
+    const statusLabels: Record<string, { label: string; color: string }> = {
         PENDING: { label: '保留中', color: 'bg-yellow-100 text-yellow-800' },
+        PENDING_PAYMENT: { label: '決済待ち', color: 'bg-orange-100 text-orange-800' },
+        AWAITING_TRANSFER: { label: '振込待ち', color: 'bg-blue-100 text-blue-800' },
+        PAYMENT_FAILED: { label: '決済失敗', color: 'bg-red-100 text-red-800' },
         CONFIRMED: { label: '確定', color: 'bg-green-100 text-green-800' },
-        CANCELLED: { label: 'キャンセル', color: 'bg-red-100 text-red-800' },
+        CANCELLED: { label: 'キャンセル', color: 'bg-gray-100 text-gray-800' },
         COMPLETED: { label: '体験済み', color: 'bg-blue-100 text-blue-800' },
     };
 

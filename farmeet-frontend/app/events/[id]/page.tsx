@@ -53,7 +53,8 @@ export default function EventDetailPage() {
         setSubmitting(true);
         try {
             const reservation = await api.createReservationWithDetails(event!.id, numberOfAdults, numberOfChildren, numberOfInfants);
-            router.push(`/reservations/${reservation.id}`);
+            // 決済ページへリダイレクト
+            router.push(`/payment?reservationId=${reservation.id}`);
         } catch (err) {
             setError('予約に失敗しました。もう一度お試しください。');
             setShowConfirmation(false);
