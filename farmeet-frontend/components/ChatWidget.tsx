@@ -189,25 +189,28 @@ export default function ChatWidget() {
 
             {/* Chat Window */}
             {isOpen && (
-                <div className="fixed bottom-24 right-6 z-50 flex h-[500px] w-[380px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-200 animate-fade-in-up">
+                <div className="fixed z-50 flex flex-col overflow-hidden bg-white shadow-2xl border border-gray-200 animate-fade-in-up
+                    bottom-24 right-6 h-[500px] w-[380px] max-w-[calc(100vw-48px)] rounded-2xl
+                    max-sm:inset-0 max-sm:bottom-0 max-sm:right-0 max-sm:h-full max-sm:w-full max-sm:max-w-full max-sm:rounded-none">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 text-white">
+                    <div className="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 text-white shrink-0
+                        max-sm:pt-12 max-sm:pb-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 shrink-0">
                                     <MessageCircle className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-base">FarMeet アシスタント</h3>
-                                    <p className="text-xs text-green-100">AIがお手伝いします</p>
+                                    <h3 className="font-bold text-lg">FarMeet アシスタント</h3>
+                                    <p className="text-sm text-green-100">AIがお手伝いします</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors shrink-0"
                                 aria-label="閉じる"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="h-6 w-6" />
                             </button>
                         </div>
                     </div>
