@@ -49,6 +49,9 @@ public class Reservation {
     @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Payment payment;
 
+    @Column(name = "invite_code", unique = true)
+    private String inviteCode;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

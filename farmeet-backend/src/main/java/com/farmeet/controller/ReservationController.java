@@ -22,10 +22,7 @@ public class ReservationController {
 
     @GetMapping
     public ResponseEntity<List<ReservationDto>> getMyReservations(@AuthenticationPrincipal User user) {
-        List<ReservationDto> reservations = reservationService.getUserReservations(user.getId())
-                .stream()
-                .map(ReservationDto::fromEntity)
-                .collect(Collectors.toList());
+        List<ReservationDto> reservations = reservationService.getUserReservationsAsDto(user.getId());
         return ResponseEntity.ok(reservations);
     }
 
@@ -84,6 +81,114 @@ public class ReservationController {
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // ========== 招待リンク機能 ==========
+
+    /**
+     * 招待リンクを生成
+     */
+    @PostMapping("/{id}/invite")
+    public ResponseEntity<?> generateInviteCode(@PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        try {
+            String inviteCode = reservationService.generateInviteCode(id, user);
+            return ResponseEntity.ok(java.util.Map.of("inviteCode", inviteCode));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 招待コードから予約詳細を取得（未認証でも可）
+     */
+    @GetMapping("/join/{code}")
+    public ResponseEntity<?> getInviteDetails(@PathVariable String code) {
+        try {
+            var reservation = reservationService.getReservationByInviteCode(code);
+            return ResponseEntity.ok(ReservationDto.fromEntity(reservation));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * 招待リンクから参加
+     */
+    @PostMapping("/join/{code}")
+    public ResponseEntity<?> joinReservation(@PathVariable String code,
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            @AuthenticationPrincipal User user) {
+        try {
+            // カテゴリを取得（デフォルトはADULT）
+            com.farmeet.entity.ReservationParticipant.ParticipantCategory category = com.farmeet.entity.ReservationParticipant.ParticipantCategory.ADULT;
+            if (body != null && body.containsKey("category")) {
+                try {
+                    category = com.farmeet.entity.ReservationParticipant.ParticipantCategory
+                            .valueOf(body.get("category"));
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest().body(java.util.Map.of("error", "Invalid category"));
+                }
+            }
+
+            var participant = reservationService.joinReservation(code, user, category);
+            return ResponseEntity.ok(java.util.Map.of(
+                    "message", "参加しました",
+                    "reservationId", participant.getReservation().getId()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 予約から離脱
+     */
+    @DeleteMapping("/{id}/participants/me")
+    public ResponseEntity<?> leaveReservation(@PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        try {
+            reservationService.leaveReservation(id, user);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 参加者一覧を取得
+     */
+    @GetMapping("/{id}/participants")
+    public ResponseEntity<?> getParticipants(@PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        try {
+            var participants = reservationService.getParticipants(id, user);
+            var result = participants.stream()
+                    .map(p -> java.util.Map.of(
+                            "id", p.getId(),
+                            "userId", p.getUser().getId(),
+                            "username", p.getUser().getUsername(),
+                            "category", p.getCategory().name(),
+                            "joinedAt", p.getJoinedAt().toString()))
+                    .collect(java.util.stream.Collectors.toList());
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 参加者を削除（予約者のみ）
+     */
+    @DeleteMapping("/{id}/participants/{participantId}")
+    public ResponseEntity<?> removeParticipant(@PathVariable Long id,
+            @PathVariable Long participantId,
+            @AuthenticationPrincipal User user) {
+        try {
+            reservationService.removeParticipant(id, participantId, user);
+            return ResponseEntity.ok(java.util.Map.of("message", "参加者を削除しました"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
         }
     }
 }

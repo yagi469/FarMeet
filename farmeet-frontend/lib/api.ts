@@ -853,6 +853,74 @@ class ApiClient {
         }
         return response.json();
     }
+
+    // ========== 招待リンク機能 ==========
+
+    async generateInviteCode(reservationId: number): Promise<{ inviteCode: string }> {
+        const response = await fetch(`${API_BASE_URL}/reservations/${reservationId}/invite`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || '招待リンクの生成に失敗しました');
+        }
+        return response.json();
+    }
+
+    async getInviteDetails(code: string) {
+        const response = await fetch(`${API_BASE_URL}/reservations/join/${code}`);
+        if (!response.ok) throw new Error('招待リンクが無効です');
+        return response.json();
+    }
+
+    async joinReservation(code: string, category: 'ADULT' | 'CHILD' | 'INFANT' = 'ADULT'): Promise<{ message: string; reservationId: number }> {
+        const response = await fetch(`${API_BASE_URL}/reservations/join/${code}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ category }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || '参加に失敗しました');
+        }
+        return response.json();
+    }
+
+    async leaveReservation(reservationId: number): Promise<void> {
+        const response = await fetch(`${API_BASE_URL}/reservations/${reservationId}/participants/me`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || '離脱に失敗しました');
+        }
+    }
+
+    async getParticipants(reservationId: number): Promise<{
+        id: number;
+        userId: number;
+        username: string;
+        joinedAt: string;
+    }[]> {
+        const response = await fetch(`${API_BASE_URL}/reservations/${reservationId}/participants`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('参加者一覧の取得に失敗しました');
+        return response.json();
+    }
+
+    async removeParticipant(reservationId: number, participantId: number): Promise<void> {
+        const response = await fetch(`${API_BASE_URL}/reservations/${reservationId}/participants/${participantId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || '参加者の削除に失敗しました');
+        }
+    }
 }
 
 export const api = new ApiClient();

@@ -31,4 +31,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                         @Param("userId") Long userId,
                         @Param("farmId") Long farmId,
                         @Param("status") ReservationStatus status);
+
+        // 招待コードで予約を検索
+        java.util.Optional<Reservation> findByInviteCode(String inviteCode);
 }
