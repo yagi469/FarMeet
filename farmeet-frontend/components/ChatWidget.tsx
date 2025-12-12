@@ -5,6 +5,85 @@ import { MessageCircle, X, Send, Loader2, MapPin } from 'lucide-react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 
+// シンプルなMarkdownレンダラー
+function renderMarkdown(text: string): React.ReactNode {
+    // 1. 改行で分割
+    const lines = text.split('\n');
+
+    return lines.map((line, lineIndex) => {
+        // リスト項目
+        if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+            const content = line.replace(/^[\s]*[-*]\s/, '');
+            return (
+                <div key={lineIndex} className="flex gap-2 ml-2">
+                    <span>•</span>
+                    <span>{renderInlineMarkdown(content)}</span>
+                </div>
+            );
+        }
+
+        // 番号付きリスト
+        const numberedMatch = line.match(/^(\d+)\.\s(.+)/);
+        if (numberedMatch) {
+            return (
+                <div key={lineIndex} className="flex gap-2 ml-2">
+                    <span>{numberedMatch[1]}.</span>
+                    <span>{renderInlineMarkdown(numberedMatch[2])}</span>
+                </div>
+            );
+        }
+
+        // 空行
+        if (line.trim() === '') {
+            return <br key={lineIndex} />;
+        }
+
+        // 通常行
+        return <div key={lineIndex}>{renderInlineMarkdown(line)}</div>;
+    });
+}
+
+// インライン要素（太字、斜体、コード）をレンダリング
+function renderInlineMarkdown(text: string): React.ReactNode {
+    const parts: React.ReactNode[] = [];
+    let remaining = text;
+    let key = 0;
+
+    while (remaining.length > 0) {
+        // 太字 (**text**)
+        const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+        if (boldMatch && boldMatch.index !== undefined) {
+            if (boldMatch.index > 0) {
+                parts.push(<span key={key++}>{remaining.slice(0, boldMatch.index)}</span>);
+            }
+            parts.push(<strong key={key++} className="font-semibold">{boldMatch[1]}</strong>);
+            remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
+            continue;
+        }
+
+        // インラインコード (`code`)
+        const codeMatch = remaining.match(/`(.+?)`/);
+        if (codeMatch && codeMatch.index !== undefined) {
+            if (codeMatch.index > 0) {
+                parts.push(<span key={key++}>{remaining.slice(0, codeMatch.index)}</span>);
+            }
+            parts.push(
+                <code key={key++} className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">
+                    {codeMatch[1]}
+                </code>
+            );
+            remaining = remaining.slice(codeMatch.index + codeMatch[0].length);
+            continue;
+        }
+
+        // マッチなし
+        parts.push(<span key={key++}>{remaining}</span>);
+        break;
+    }
+
+    return parts;
+}
+
 interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
@@ -225,7 +304,7 @@ export default function ChatWidget() {
                                         : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-md'
                                         }`}
                                 >
-                                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                    <div className="text-sm">{renderMarkdown(message.content)}</div>
 
                                     {/* Farm Suggestions */}
                                     {message.suggestions && message.suggestions.length > 0 && (
