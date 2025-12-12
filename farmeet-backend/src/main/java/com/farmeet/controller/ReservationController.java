@@ -23,6 +23,17 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getUserReservations(user.getId()));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        try {
+            Reservation reservation = reservationService.getReservationById(id, user);
+            return ResponseEntity.ok(reservation);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/farmer")
     public ResponseEntity<List<Reservation>> getFarmerReservations(@AuthenticationPrincipal User user) {
         if (user.getRole() != User.Role.FARMER) {

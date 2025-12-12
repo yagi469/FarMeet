@@ -18,9 +18,19 @@ public class ExperienceEventService {
         return eventRepository.findAll();
     }
 
+    public List<com.farmeet.dto.ExperienceEventDto> getAllEventsDto() {
+        return getAllEvents().stream()
+                .map(com.farmeet.dto.ExperienceEventDto::fromEntity)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public ExperienceEvent getEventById(Long id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
+    }
+
+    public com.farmeet.dto.ExperienceEventDto getEventDtoById(Long id) {
+        return com.farmeet.dto.ExperienceEventDto.fromEntity(getEventById(id));
     }
 
     public List<ExperienceEvent> getEventsByFarm(Long farmId) {

@@ -29,6 +29,19 @@ public class ReservationService {
         return reservationRepository.findByFarmOwnerId(farmerId);
     }
 
+    public Reservation getReservationById(Long id, User user) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reservation not found"));
+
+        // ユーザー本人の予約、または農園オーナーの予約のみ閲覧可能
+        if (!reservation.getUser().getId().equals(user.getId()) &&
+                !reservation.getEvent().getFarm().getOwner().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        return reservation;
+    }
+
     @Transactional
     public Reservation createReservation(User user, Long eventId, Integer numberOfAdults, Integer numberOfChildren,
             Integer numberOfInfants) {

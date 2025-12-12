@@ -1,5 +1,6 @@
 package com.farmeet.controller;
 
+import com.farmeet.dto.ExperienceEventDto;
 import com.farmeet.entity.ExperienceEvent;
 import com.farmeet.entity.User;
 import com.farmeet.service.ExperienceEventService;
@@ -18,14 +19,14 @@ public class ExperienceEventController {
     private ExperienceEventService eventService;
 
     @GetMapping
-    public ResponseEntity<List<ExperienceEvent>> getAllEvents() {
-        return ResponseEntity.ok(eventService.getAllEvents());
+    public ResponseEntity<List<ExperienceEventDto>> getAllEvents() {
+        return ResponseEntity.ok(eventService.getAllEventsDto());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ExperienceEvent> getEventById(@PathVariable Long id) {
+    public ResponseEntity<ExperienceEventDto> getEventById(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(eventService.getEventById(id));
+            return ResponseEntity.ok(eventService.getEventDtoById(id));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

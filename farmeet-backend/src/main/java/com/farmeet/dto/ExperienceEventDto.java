@@ -18,6 +18,7 @@ public class ExperienceEventDto {
     private Integer availableSlots;
     private String category;
     private Long farmId; // We send only ID to avoid deep nesting/recursion
+    private FarmDto farm; // フロントエンドでfarm.nameなどを参照するため
 
     public static ExperienceEventDto fromEntity(ExperienceEvent event) {
         ExperienceEventDto dto = new ExperienceEventDto();
@@ -32,6 +33,7 @@ public class ExperienceEventDto {
         dto.setCategory(event.getCategory());
         if (event.getFarm() != null) {
             dto.setFarmId(event.getFarm().getId());
+            dto.setFarm(FarmDto.fromEntity(event.getFarm()));
         }
         return dto;
     }

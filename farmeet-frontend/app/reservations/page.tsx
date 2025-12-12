@@ -108,7 +108,11 @@ export default function ReservationsPage() {
             ) : (
                 <div className="space-y-4">
                     {reservations.map((reservation) => (
-                        <div key={reservation.id} className="bg-white rounded-lg shadow-md p-6">
+                        <div
+                            key={reservation.id}
+                            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                            onClick={() => router.push(`/reservations/${reservation.id}`)}
+                        >
                             <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <h2 className="text-xl font-semibold mb-2">

@@ -292,6 +292,15 @@ class ApiClient {
         return response.json();
     }
 
+    async getReservationById(id: number) {
+        const response = await fetch(`${API_BASE_URL}/reservations/${id}`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get reservation');
+        return response.json();
+    }
+
+
     async createReservation(eventId: number, numberOfPeople: number) {
         const response = await fetch(`${API_BASE_URL}/reservations`, {
             method: 'POST',

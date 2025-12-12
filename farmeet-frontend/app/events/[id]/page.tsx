@@ -52,9 +52,8 @@ export default function EventDetailPage() {
     const confirmReservation = async () => {
         setSubmitting(true);
         try {
-            await api.createReservationWithDetails(event!.id, numberOfAdults, numberOfChildren, numberOfInfants);
-            alert('予約が完了しました！');
-            router.push('/reservations');
+            const reservation = await api.createReservationWithDetails(event!.id, numberOfAdults, numberOfChildren, numberOfInfants);
+            router.push(`/reservations/${reservation.id}`);
         } catch (err) {
             setError('予約に失敗しました。もう一度お試しください。');
             setShowConfirmation(false);
