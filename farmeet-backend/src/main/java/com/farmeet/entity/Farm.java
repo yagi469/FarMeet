@@ -49,6 +49,12 @@ public class Farm {
     @Column(name = "feature")
     private List<String> features;
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
     private boolean deleted = false;
 
     @PrePersist

@@ -96,6 +96,9 @@ public class DataInitializer implements CommandLineRunner {
 
                 // 既存イベントでカテゴリがnullのものを更新（本番環境用マイグレーション）
                 updateExistingEventsWithCategory();
+
+                // 既存農園で座標がnullのものを更新（地図機能用マイグレーション）
+                updateExistingFarmsWithCoordinates();
         }
 
         private void updateExistingEventsWithCategory() {
@@ -131,6 +134,58 @@ public class DataInitializer implements CommandLineRunner {
                 }
                 // デフォルトは野菜
                 return "VEGETABLE";
+        }
+
+        /**
+         * 既存農園で座標がnullのものに座標を設定するマイグレーション
+         */
+        private void updateExistingFarmsWithCoordinates() {
+                List<Farm> farms = farmRepository.findAll();
+                int updated = 0;
+                for (Farm farm : farms) {
+                        if (farm.getLatitude() == null || farm.getLongitude() == null) {
+                                double[] coords = getCoordinatesForFarm(farm.getName());
+                                if (coords != null) {
+                                        farm.setLatitude(coords[0]);
+                                        farm.setLongitude(coords[1]);
+                                        farmRepository.save(farm);
+                                        updated++;
+                                }
+                        }
+                }
+                if (updated > 0) {
+                        System.out.println(updated + "件の農園に座標を設定しました。");
+                }
+        }
+
+        /**
+         * 農園名から座標を取得（既存データのマイグレーション用）
+         */
+        private double[] getCoordinatesForFarm(String name) {
+                switch (name) {
+                        case "緑の里オーガニック農園":
+                                return new double[] { 35.9917, 139.0855 };
+                        case "さくらんぼの丘ファーム":
+                                return new double[] { 38.3614, 140.3781 };
+                        case "ひまわり牧場":
+                                return new double[] { 43.3415, 142.3833 };
+                        case "棚田の風景農園":
+                                return new double[] { 37.1266, 138.7612 };
+                        case "ぶどうの丘ワイナリー":
+                                return new double[] { 35.7099, 138.7275 };
+                        case "富士茶園":
+                                return new double[] { 35.1625, 138.6767 };
+                        case "京野菜ファーム":
+                                return new double[] { 35.0175, 135.5807 };
+                        case "陽だまりのブルーベリー農園":
+                                return new double[] { 34.6555, 133.9185 };
+                        case "あまおう農園":
+                                return new double[] { 33.3209, 130.5083 };
+                        case "南国トロピカル農園":
+                                return new double[] { 26.5917, 127.9773 };
+                        default:
+                                return null;
+                }
         }
 
         private User createAdminIfNotExists() {
@@ -188,6 +243,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         private List<Farm> createSampleFarms(User owner) {
+                // 埼玉県秩父市
                 Farm farm1 = createFarm(owner, "緑の里オーガニック農園",
                                 "無農薬・有機栽培にこだわった野菜作りを体験できます。都心から車で90分、豊かな自然に囲まれたプライベート空間。", "埼玉県秩父市",
                                 "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&q=80",
@@ -196,8 +252,10 @@ public class DataInitializer implements CommandLineRunner {
                                                 "https://images.unsplash.com/photo-1595855709940-577268785a7d?w=800&q=80",
                                                 "https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=800&q=80",
                                                 "https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=800&q=80"),
-                                List.of("無料駐車場", "手袋貸出", "トイレ", "休憩所", "BBQエリア", "収穫体験ガイド"));
+                                List.of("無料駐車場", "手袋貸出", "トイレ", "休憩所", "BBQエリア", "収穫体験ガイド"),
+                                35.9917, 139.0855);
 
+                // 山形県天童市
                 Farm farm2 = createFarm(owner, "さくらんぼの丘ファーム",
                                 "山形県産の甘くて美味しいさくらんぼを自分で収穫できます。お子様連れでも安心の平坦な農園です。", "山形県天童市",
                                 "https://images.unsplash.com/photo-1528821128474-27f963b062bf?w=800&q=80",
@@ -206,62 +264,78 @@ public class DataInitializer implements CommandLineRunner {
                                                 "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=800&q=80",
                                                 "https://images.unsplash.com/photo-1597430292881-897b2d56b093?w=800&q=80",
                                                 "https://images.unsplash.com/photo-1621459439632-15f1874252d6?w=800&q=80"),
-                                List.of("雨天対応ハウス", "駐車場あり", "トイレ", "直売所", "カフェ併設", "ペット同伴可"));
+                                List.of("雨天対応ハウス", "駐車場あり", "トイレ", "直売所", "カフェ併設", "ペット同伴可"),
+                                38.3614, 140.3781);
 
-                // Other farms with simpler data for brevity but valid arguments
+                // 北海道富良野市
                 Farm farm3 = createFarm(owner, "ひまわり牧場",
-                                "北海道の大自然の中で、乳搾りやバター作り体験ができます。", "北海道富良野市",
+                                "北海道の大自然の中で、乳搎りやバター作り体験ができます。", "北海道富良野市",
                                 "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&q=80",
                                 List.of("https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&q=80"),
-                                List.of("駐車場", "体験教室"));
+                                List.of("駐車場", "体験教室"),
+                                43.3415, 142.3833);
 
+                // 新潟県十日町市
                 Farm farm4 = createFarm(owner, "棚田の風景農園",
                                 "美しい棚田で田植えや稲刈り体験ができます。", "新潟県十日町市",
                                 "https://images.unsplash.com/photo-1559884743-74a57598c6c7?w=800&q=80",
                                 List.of("https://images.unsplash.com/photo-1559884743-74a57598c6c7?w=800&q=80"),
-                                List.of("絶景", "長靴貸出"));
+                                List.of("絶景", "長靴貸出"),
+                                37.1266, 138.7612);
 
+                // 山梨県甲州市
                 Farm farm5 = createFarm(owner, "ぶどうの丘ワイナリー",
                                 "ワイン用ぶどうの収穫体験とワイナリー見学ができます。", "山梨県甲州市",
                                 "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&q=80",
                                 List.of("https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&q=80"),
-                                List.of("試飲あり", "レストラン"));
+                                List.of("試飲あり", "レストラン"),
+                                35.7099, 138.7275);
 
+                // 静岡県富士市
                 Farm farm6 = createFarm(owner, "富士茶園",
                                 "富士山の麓で育つ高品質なお茶葉。お茶摘み体験ができます。", "静岡県富士市",
                                 "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80",
                                 List.of("https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80"),
-                                List.of("お茶セット付き", "富士山眺望"));
+                                List.of("お茶セット付き", "富士山眺望"),
+                                35.1625, 138.6767);
 
+                // 京都府亀岡市
                 Farm farm7 = createFarm(owner, "京野菜ファーム",
                                 "京都の伝統野菜を育てる農園。京野菜ならではの味わいを楽しめます。", "京都府亀岡市",
                                 "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80",
                                 List.of("https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80"),
-                                List.of("料理教室", "送迎あり"));
+                                List.of("料理教室", "送迎あり"),
+                                35.0175, 135.5807);
 
+                // 岡山県岡山市
                 Farm farm8 = createFarm(owner, "陽だまりのブルーベリー農園",
                                 "岡山県が誇る白桃とマスカットの農園。高級フルーツを収穫できます。", "岡山県岡山市",
                                 "https://images.unsplash.com/photo-1595855709940-577268785a7d?w=800&q=80",
                                 List.of("https://images.unsplash.com/photo-1595855709940-577268785a7d?w=800&q=80"),
-                                List.of("食べ放題", "カフェ"));
+                                List.of("食べ放題", "カフェ"),
+                                34.6555, 133.9185);
 
+                // 福岡県久留米市
                 Farm farm9 = createFarm(owner, "あまおう農園",
                                 "福岡県の特産品あまおういちごを栽培する農園。食べ放題で楽しめます。", "福岡県久留米市",
                                 "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=800&q=80",
                                 List.of("https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=800&q=80"),
-                                List.of("バリアフリー", "ベビーカー可"));
+                                List.of("バリアフリー", "ベビーカー可"),
+                                33.3209, 130.5083);
 
+                // 沖縄県名護市
                 Farm farm10 = createFarm(owner, "南国トロピカル農園",
                                 "沖縄の太陽をたっぷり浴びたパイナップルやマンゴーを収穫できます。", "沖縄県名護市",
                                 "https://images.unsplash.com/photo-1587049352846-4a222e784538?w=800&q=80",
                                 List.of("https://images.unsplash.com/photo-1587049352846-4a222e784538?w=800&q=80"),
-                                List.of("スムージー販売", "沖縄体験"));
+                                List.of("スムージー販売", "沖縄体験"),
+                                26.5917, 127.9773);
 
                 return List.of(farm1, farm2, farm3, farm4, farm5, farm6, farm7, farm8, farm9, farm10);
         }
 
         private Farm createFarm(User owner, String name, String description, String location, String imageUrl,
-                        List<String> images, List<String> features) {
+                        List<String> images, List<String> features, Double latitude, Double longitude) {
                 Farm farm = new Farm();
                 farm.setName(name);
                 farm.setDescription(description);
@@ -269,6 +343,8 @@ public class DataInitializer implements CommandLineRunner {
                 farm.setImageUrl(imageUrl);
                 farm.setImages(images);
                 farm.setFeatures(features);
+                farm.setLatitude(latitude);
+                farm.setLongitude(longitude);
                 farm.setOwner(owner);
                 return farmRepository.save(farm);
         }

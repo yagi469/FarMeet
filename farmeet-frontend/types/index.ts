@@ -17,6 +17,8 @@ export interface Farm {
     imageUrl?: string;
     images?: string[];
     features?: string[];
+    latitude?: number;
+    longitude?: number;
     createdAt: string;
 }
 

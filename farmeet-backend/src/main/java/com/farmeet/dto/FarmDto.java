@@ -14,6 +14,8 @@ public class FarmDto {
     private String imageUrl;
     private List<String> images;
     private List<String> features;
+    private Double latitude;
+    private Double longitude;
     private UserDto owner;
 
     public static FarmDto fromEntity(Farm farm) {
@@ -25,6 +27,8 @@ public class FarmDto {
         dto.setImageUrl(farm.getImageUrl());
         dto.setImages(farm.getImages());
         dto.setFeatures(farm.getFeatures());
+        dto.setLatitude(farm.getLatitude());
+        dto.setLongitude(farm.getLongitude());
         if (farm.getOwner() != null) {
             dto.setOwner(UserDto.fromEntity(farm.getOwner()));
         }
