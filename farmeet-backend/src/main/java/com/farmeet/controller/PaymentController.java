@@ -160,9 +160,9 @@ public class PaymentController {
     public ResponseEntity<Map<String, Object>> handlePayPayComplete(
             @RequestBody Map<String, Long> request) {
         try {
-            Long reservationId = request.get("reservationId");
-            paymentService.confirmReservationPayment(reservationId);
-            return ResponseEntity.ok(Map.of("success", true));
+            Long paymentId = request.get("paymentId");
+            Payment payment = paymentService.completePayPayPayment(paymentId);
+            return ResponseEntity.ok(Map.of("success", true, "reservationId", payment.getReservation().getId()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }

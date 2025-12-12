@@ -788,11 +788,11 @@ class ApiClient {
         return response.json();
     }
 
-    async completePayPayPayment(reservationId: number): Promise<{ success: boolean }> {
+    async completePayPayPayment(paymentId: number): Promise<{ success: boolean }> {
         const response = await fetch(`${API_BASE_URL}/payments/paypay/complete`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ reservationId }),
+            body: JSON.stringify({ paymentId }),
         });
         if (!response.ok) throw new Error('PayPay決済の完了に失敗しました');
         return response.json();

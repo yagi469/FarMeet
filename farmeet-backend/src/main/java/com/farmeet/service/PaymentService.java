@@ -130,6 +130,30 @@ public class PaymentService {
     }
 
     /**
+     * PayPay決済完了処理
+     */
+    @Transactional
+    public Payment completePayPayPayment(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        if (payment.getPaymentMethod() != PaymentMethod.PAYPAY) {
+            throw new RuntimeException("This payment is not a PayPay payment");
+        }
+
+        payment.setPaymentStatus(PaymentStatus.COMPLETED);
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        // 予約を確定
+        Reservation reservation = payment.getReservation();
+        reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
+        reservationRepository.save(reservation);
+
+        return payment;
+    }
+
+    /**
      * 決済完了後の予約確定処理
      */
     @Transactional
