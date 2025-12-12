@@ -150,7 +150,10 @@ export default function ReservationsPage() {
 
                             {reservation.status === 'CONFIRMED' && (
                                 <button
-                                    onClick={() => handleCancel(reservation.id)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCancel(reservation.id);
+                                    }}
                                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
                                 >
                                     予約をキャンセル

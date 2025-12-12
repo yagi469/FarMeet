@@ -1,5 +1,6 @@
 package com.farmeet.controller;
 
+import com.farmeet.dto.ReservationDto;
 import com.farmeet.dto.ReservationRequest;
 import com.farmeet.entity.Reservation;
 import com.farmeet.entity.User;
@@ -10,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -19,31 +21,39 @@ public class ReservationController {
     private ReservationService reservationService;
 
     @GetMapping
-    public ResponseEntity<List<Reservation>> getMyReservations(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(reservationService.getUserReservations(user.getId()));
+    public ResponseEntity<List<ReservationDto>> getMyReservations(@AuthenticationPrincipal User user) {
+        List<ReservationDto> reservations = reservationService.getUserReservations(user.getId())
+                .stream()
+                .map(ReservationDto::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(reservations);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id,
+    public ResponseEntity<ReservationDto> getReservationById(@PathVariable Long id,
             @AuthenticationPrincipal User user) {
         try {
             Reservation reservation = reservationService.getReservationById(id, user);
-            return ResponseEntity.ok(reservation);
+            return ResponseEntity.ok(ReservationDto.fromEntity(reservation));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @GetMapping("/farmer")
-    public ResponseEntity<List<Reservation>> getFarmerReservations(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<ReservationDto>> getFarmerReservations(@AuthenticationPrincipal User user) {
         if (user.getRole() != User.Role.FARMER) {
             return ResponseEntity.status(403).build();
         }
-        return ResponseEntity.ok(reservationService.getFarmerReservations(user.getId()));
+        List<ReservationDto> reservations = reservationService.getFarmerReservations(user.getId())
+                .stream()
+                .map(ReservationDto::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(reservations);
     }
 
     @PostMapping
-    public ResponseEntity<Reservation> createReservation(@RequestBody ReservationRequest request,
+    public ResponseEntity<ReservationDto> createReservation(@RequestBody ReservationRequest request,
             @AuthenticationPrincipal User user) {
         try {
             Reservation reservation;
@@ -60,7 +70,7 @@ public class ReservationController {
                 reservation = reservationService.createReservation(
                         user, request.getEventId(), request.getNumberOfPeople());
             }
-            return ResponseEntity.ok(reservation);
+            return ResponseEntity.ok(ReservationDto.fromEntity(reservation));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
