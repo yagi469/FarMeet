@@ -12,6 +12,8 @@ export default function FavoritesPage() {
     const router = useRouter();
     const [farms, setFarms] = useState<Farm[]>([]);
     const [loading, setLoading] = useState(true);
+    const [ratings, setRatings] = useState<Record<number, { averageRating: number; reviewCount: number }>>({});
+    const [minPrices, setMinPrices] = useState<Record<number, number>>({});
 
     useEffect(() => {
         if (!authHelper.isAuthenticated()) {
@@ -25,6 +27,34 @@ export default function FavoritesPage() {
         try {
             const data = await api.getFavorites();
             setFarms(data as Farm[]);
+
+            // レビュー情報と最安価格を取得
+            if (data.length > 0) {
+                const farmIds = data.map((f: Farm) => f.id);
+
+                // 各農園のレビュー情報を取得
+                const ratingsData: Record<number, { averageRating: number; reviewCount: number }> = {};
+                for (const farm of data as Farm[]) {
+                    try {
+                        const reviewData = await api.getReviews(farm.id);
+                        ratingsData[farm.id] = {
+                            averageRating: reviewData.averageRating,
+                            reviewCount: reviewData.reviewCount
+                        };
+                    } catch {
+                        // レビュー取得失敗は無視
+                    }
+                }
+                setRatings(ratingsData);
+
+                // 最安価格を取得
+                try {
+                    const prices = await api.getMinPrices(farmIds);
+                    setMinPrices(prices);
+                } catch {
+                    // 価格取得失敗は無視
+                }
+            }
         } catch (error) {
             console.error('お気に入りの読み込みに失敗しました:', error);
         } finally {
@@ -78,6 +108,9 @@ export default function FavoritesPage() {
                             farm={farm}
                             isFavorite={true}
                             onFavoriteChange={handleFavoriteChange}
+                            averageRating={ratings[farm.id]?.averageRating}
+                            reviewCount={ratings[farm.id]?.reviewCount}
+                            minPrice={minPrices[farm.id]}
                         />
                     ))}
                 </div>
@@ -85,3 +118,4 @@ export default function FavoritesPage() {
         </div>
     );
 }
+
