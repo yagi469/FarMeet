@@ -11,6 +11,8 @@ import SearchBar from '@/components/SearchBar';
 import LocationFilter from '@/components/LocationFilter';
 import DatePicker from '@/components/DatePicker';
 import GuestSelector from '@/components/GuestSelector';
+import SeasonCalendar from '@/components/SeasonCalendar';
+import { ProduceItem } from '@/lib/seasonData';
 
 export default function Home() {
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -130,6 +132,15 @@ export default function Home() {
     performSearch(searchKeyword, selectedLocation, selectedDate, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
+  // シーズンカレンダーから収穫物がクリックされた時のハンドラー
+  const handleProduceClick = (produce: ProduceItem) => {
+    // キーワードの最初の1つを使って検索
+    const keyword = produce.keywords[0];
+    setSearchKeyword(keyword);
+    setSelectedCategory(produce.category);
+    performSearch(keyword, selectedLocation, selectedDate, adults, children, produce.category, priceRange.min, priceRange.max);
+  };
+
   const performSearch = async (keyword: string, location: string, date: string, adultsCount: number, childrenCount: number, category: string, minPrice?: number, maxPrice?: number) => {
     setLoading(true);
     try {
@@ -233,6 +244,11 @@ export default function Home() {
           </button>
         </div>
       </div>
+
+      {/* シーズンカレンダー - 検索していないときのみ表示 */}
+      {!isSearched && (
+        <SeasonCalendar onProduceClick={handleProduceClick} />
+      )}
 
 
 
