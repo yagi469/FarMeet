@@ -26,6 +26,7 @@ export default function Home() {
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
   const [priceRange, setPriceRange] = useState<{ min?: number; max?: number }>({});
   const [pricesMap, setPricesMap] = useState<Record<number, number>>({});
+  const [isSearched, setIsSearched] = useState(false);
 
   useEffect(() => {
     loadFarms();
@@ -143,6 +144,7 @@ export default function Home() {
         maxPrice
       );
       setFarms(data);
+      setIsSearched(true);
       const farmIds = data.map((f: Farm) => f.id);
       // Reload favorite status for new farms
       await loadFavoriteStatus(farmIds);
@@ -266,8 +268,8 @@ export default function Home() {
         </button>
       </div>
 
-      {/* 最近見た農園 */}
-      {recentlyViewed.length > 0 && (
+      {/* 最近見た農園 - 検索していないときのみ表示 */}
+      {!isSearched && recentlyViewed.length > 0 && (
         <div className="mb-12">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">🕒 最近見た農園</h2>
           <div className="flex gap-4 overflow-x-auto pb-4">
@@ -307,7 +309,9 @@ export default function Home() {
         </div>
       ) : (
         <>
-          <h2 className="text-2xl font-semibold mb-6 text-gray-900">おすすめの農園</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-gray-900">
+            {isSearched ? `検索結果（${farms.length}件）` : 'おすすめの農園'}
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
             {farms.map((farm) => (
               <FarmCard
