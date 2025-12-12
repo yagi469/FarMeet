@@ -132,6 +132,13 @@
             <artifactId>stripe-java</artifactId>
             <version>26.1.0</version>
         </dependency>
+        
+        <!-- Google Gemini AI SDK -->
+        <dependency>
+            <groupId>com.google.genai</groupId>
+            <artifactId>google-genai</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
     
     <build>

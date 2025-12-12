@@ -1,0 +1,155 @@
+package com.farmeet.service;
+
+import com.farmeet.config.GeminiConfig;
+import com.farmeet.dto.ChatRequest;
+import com.farmeet.dto.ChatResponse;
+import com.farmeet.entity.Farm;
+import com.farmeet.repository.FarmRepository;
+import com.google.genai.Client;
+import com.google.genai.types.GenerateContentResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class AiService {
+
+    private final Client geminiClient;
+    private final GeminiConfig geminiConfig;
+    private final FarmRepository farmRepository;
+
+    private static final String SYSTEM_PROMPT = """
+            あなたは「FarMeet」の親切なAIアシスタントです。
+            FarMeetは農園での収穫体験を予約できるサービスです。
+
+            【できること】
+            - 農園の検索・おすすめ
+            - 予約方法のご案内
+            - よくある質問への回答
+
+            【回答ルール】
+            - 簡潔で親しみやすい日本語で回答してください
+            - 具体的な農園情報がある場合は名前と特徴を紹介してください
+            - 予約については該当農園のページへ誘導してください
+            - 不明な点は「お問い合わせフォームからご連絡ください」と案内してください
+
+            【よくある質問への回答例】
+            - 予約のキャンセル: 「予約は予約一覧ページからキャンセルできます。ただし、キャンセルポリシーは農園により異なりますのでご注意ください。」
+            - 支払い方法: 「クレジットカード（Visa, Mastercard等）またはPayPayでお支払いいただけます。」
+            - 持ち物: 「動きやすい服装、帽子、飲み物をお持ちください。詳細は各農園のページをご確認ください。」
+
+            【利用可能な農園データ】
+            %s
+            """;
+
+    @Autowired
+    public AiService(Client geminiClient, GeminiConfig geminiConfig, FarmRepository farmRepository) {
+        this.geminiClient = geminiClient;
+        this.geminiConfig = geminiConfig;
+        this.farmRepository = farmRepository;
+    }
+
+    public ChatResponse chat(ChatRequest request) {
+        if (geminiClient == null) {
+            return ChatResponse.error("AIサービスが設定されていません。管理者にお問い合わせください。");
+        }
+
+        try {
+            // Build farm data context for RAG
+            String farmContext = buildFarmContext();
+            String systemPromptWithData = String.format(SYSTEM_PROMPT, farmContext);
+
+            // Build conversation prompt including history
+            StringBuilder promptBuilder = new StringBuilder();
+            promptBuilder.append(systemPromptWithData);
+            promptBuilder.append("\n\n");
+
+            // Add history if present
+            if (request.getHistory() != null && !request.getHistory().isEmpty()) {
+                promptBuilder.append("【これまでの会話】\n");
+                for (ChatRequest.ChatMessage msg : request.getHistory()) {
+                    String role = "user".equals(msg.getRole()) ? "ユーザー" : "アシスタント";
+                    promptBuilder.append(role).append(": ").append(msg.getContent()).append("\n");
+                }
+                promptBuilder.append("\n");
+            }
+
+            // Add current user message
+            promptBuilder.append("【ユーザーの質問】\n").append(request.getMessage());
+
+            // Call Gemini API with simple string content
+            GenerateContentResponse response = geminiClient.models.generateContent(
+                    geminiConfig.getModel(),
+                    promptBuilder.toString(),
+                    null // config
+            );
+
+            String aiResponse = response.text();
+
+            // Check if we should suggest farms
+            List<ChatResponse.FarmSuggestion> suggestions = extractFarmSuggestions(request.getMessage());
+
+            return ChatResponse.success(aiResponse, suggestions.isEmpty() ? null : suggestions);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ChatResponse.error("申し訳ありません。一時的なエラーが発生しました。しばらくしてからもう一度お試しください。");
+        }
+    }
+
+    private String buildFarmContext() {
+        List<Farm> farms = farmRepository.findAll();
+
+        if (farms.isEmpty()) {
+            return "（現在登録されている農園はありません）";
+        }
+
+        return farms.stream()
+                .map(farm -> String.format(
+                        "- %s（%s）: %s",
+                        farm.getName(),
+                        farm.getLocation(),
+                        farm.getDescription() != null
+                                ? farm.getDescription().substring(0, Math.min(100, farm.getDescription().length()))
+                                : ""))
+                .collect(Collectors.joining("\n"));
+    }
+
+    private List<ChatResponse.FarmSuggestion> extractFarmSuggestions(String userMessage) {
+        // Simple keyword-based farm suggestion
+        String lowerMessage = userMessage.toLowerCase();
+        List<Farm> matchingFarms = new ArrayList<>();
+
+        // Search by keywords in user message
+        List<Farm> allFarms = farmRepository.findAll();
+        for (Farm farm : allFarms) {
+            String farmInfo = (farm.getName() + " " + farm.getLocation() + " " +
+                    (farm.getDescription() != null ? farm.getDescription() : "")).toLowerCase();
+
+            // Check for common keywords
+            if ((lowerMessage.contains("りんご") && farmInfo.contains("りんご")) ||
+                    (lowerMessage.contains("ぶどう") && farmInfo.contains("ぶどう")) ||
+                    (lowerMessage.contains("いちご") && farmInfo.contains("いちご")) ||
+                    (lowerMessage.contains("さくらんぼ") && farmInfo.contains("さくらんぼ")) ||
+                    (lowerMessage.contains("梨") && farmInfo.contains("梨")) ||
+                    (lowerMessage.contains("みかん") && farmInfo.contains("みかん")) ||
+                    (lowerMessage.contains("野菜") && farmInfo.contains("野菜")) ||
+                    (lowerMessage.contains(farm.getLocation().toLowerCase()))) {
+                matchingFarms.add(farm);
+            }
+        }
+
+        // Limit to top 3
+        return matchingFarms.stream()
+                .limit(3)
+                .map(farm -> new ChatResponse.FarmSuggestion(
+                        farm.getId(),
+                        farm.getName(),
+                        farm.getLocation(),
+                        farm.getImageUrl()))
+                .collect(Collectors.toList());
+    }
+}

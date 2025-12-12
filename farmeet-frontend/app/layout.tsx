@@ -19,8 +19,7 @@ export const metadata: Metadata = {
 
 import Header from "@/components/Header";
 import { AuthProvider } from "@/context/AuthContext";
-
-// ... (imports)
+import ChatWidget from "@/components/ChatWidget";
 
 export default function RootLayout({
   children,
@@ -28,13 +27,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
           <Header />
           <main>{children}</main>
+          <ChatWidget />
         </AuthProvider>
       </body>
     </html>

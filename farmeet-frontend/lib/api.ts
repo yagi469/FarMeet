@@ -827,6 +827,32 @@ class ApiClient {
         }
         return response.json();
     }
+
+    // ========== AI Chat ==========
+
+    async sendChatMessage(
+        message: string,
+        history?: { role: string; content: string }[]
+    ): Promise<{
+        message: string;
+        suggestions?: { id: number; name: string; location: string; imageUrl: string }[];
+        success: boolean;
+        error?: string;
+    }> {
+        const response = await fetch(`${API_BASE_URL}/ai/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, history }),
+        });
+        if (!response.ok) {
+            return {
+                message: '',
+                success: false,
+                error: 'チャットサービスに接続できませんでした。'
+            };
+        }
+        return response.json();
+    }
 }
 
 export const api = new ApiClient();
