@@ -191,15 +191,24 @@ export default function ChatWidget() {
             {isOpen && (
                 <div className="fixed bottom-24 right-6 z-50 flex h-[500px] w-[380px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-200 animate-fade-in-up">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-green-600 to-green-500 px-4 py-3 text-white">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-                                <MessageCircle className="h-5 w-5" />
+                    <div className="bg-gradient-to-r from-green-600 to-green-500 px-4 py-4 text-white">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                                    <MessageCircle className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-base">FarMeet アシスタント</h3>
+                                    <p className="text-xs text-green-100">AIがお手伝いします</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold">FarMeet アシスタント</h3>
-                                <p className="text-xs text-green-100">AIがお手伝いします</p>
-                            </div>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                                aria-label="閉じる"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
                         </div>
                     </div>
 
