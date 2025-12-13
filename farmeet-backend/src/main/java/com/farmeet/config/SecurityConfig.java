@@ -35,6 +35,7 @@ public class SecurityConfig {
                                                                 "/error", "/api/ai/**")
                                                 .permitAll()
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                                .requestMatchers("/api/gift-vouchers/admin/**").hasRole("ADMIN")
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
