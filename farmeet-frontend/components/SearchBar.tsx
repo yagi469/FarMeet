@@ -32,7 +32,8 @@ export default function SearchBar({ onSearch, onAiSearch }: SearchBarProps) {
 
         setIsAiLoading(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/ai/recommend`, {
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+            const response = await fetch(`${apiBaseUrl}/ai/recommend`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: keyword }),
