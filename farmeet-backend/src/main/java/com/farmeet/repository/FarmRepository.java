@@ -25,4 +25,7 @@ public interface FarmRepository extends JpaRepository<Farm, Long> {
 
     // 地域で絞り込み
     List<Farm> findByLocationContaining(String location);
+
+    // 表示順で並び替え（トップページ用）
+    List<Farm> findAllByOrderByDisplayOrderAsc();
 }

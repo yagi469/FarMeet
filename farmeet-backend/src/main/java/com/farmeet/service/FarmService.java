@@ -26,7 +26,7 @@ public class FarmService {
     private ExperienceEventRepository eventRepository;
 
     public List<FarmDto> getAllFarms() {
-        return farmRepository.findAll().stream()
+        return farmRepository.findAllByOrderByDisplayOrderAsc().stream()
                 .map(FarmDto::fromEntity)
                 .collect(Collectors.toList());
     }
