@@ -28,22 +28,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <head>
-        {/* TEMPORARY - Error handler for iOS 15 debugging */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.onerror = function(message, source, lineno, colno, error) {
-                alert('JS Error: ' + message + '\\n\\nSource: ' + source + '\\nLine: ' + lineno);
-                return false;
-              };
-              window.addEventListener('unhandledrejection', function(event) {
-                alert('Promise Rejection: ' + event.reason);
-              });
-            `,
-          }}
-        />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
