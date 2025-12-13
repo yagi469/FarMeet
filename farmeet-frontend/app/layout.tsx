@@ -28,6 +28,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        {/* Eruda - Mobile debugging console (TEMPORARY - remove after debugging) */}
+        <script src="https://cdn.jsdelivr.net/npm/eruda" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof eruda !== 'undefined') {
+                eruda.init();
+              }
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
