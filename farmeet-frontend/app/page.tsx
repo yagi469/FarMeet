@@ -13,6 +13,7 @@ import DatePicker from '@/components/DatePicker';
 import GuestSelector from '@/components/GuestSelector';
 import SeasonCalendar from '@/components/SeasonCalendar';
 import FarmMapView from '@/components/FarmMapView';
+import RecommendedFarms from '@/components/RecommendedFarms';
 import { ProduceItem } from '@/lib/seasonData';
 
 // AI検索結果の型
@@ -351,6 +352,7 @@ export default function Home() {
       )}
 
       {/* カテゴリータブ - Airbnbスタイル */}
+      {/* カテゴリータブ - Airbnbスタイル */}
       <div className="flex gap-8 mb-8 overflow-x-auto pb-4 border-b">
         <button
           onClick={() => handleCategoryChange('')}
@@ -381,6 +383,18 @@ export default function Home() {
           <span className="text-xs font-medium whitespace-nowrap">花摽み</span>
         </button>
       </div>
+
+      {/* おすすめ農園レコメンド */}
+      {!isSearched && (
+        <RecommendedFarms
+          allFarms={farms}
+          recentlyViewed={recentlyViewed}
+          favoriteIds={favoriteIds}
+          ratingsMap={ratingsMap}
+          pricesMap={pricesMap}
+          onFavoriteChange={handleFavoriteChange}
+        />
+      )}
 
       {/* 最近見た農園 - 検索していないときのみ表示 */}
       {!isSearched && recentlyViewed.length > 0 && (
