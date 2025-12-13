@@ -4,8 +4,107 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, MapPin } from 'lucide-react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
-// remark-gfm removed for iOS 15 compatibility (lookbehind regex not supported in Safari 15)
+
+// Simple markdown parser for iOS 15 compatibility (replaces react-markdown)
+function parseSimpleMarkdown(text: string): React.ReactNode[] {
+    const lines = text.split('\n');
+    const result: React.ReactNode[] = [];
+    let listItems: string[] = [];
+    let listType: 'ul' | 'ol' | null = null;
+
+    const flushList = () => {
+        if (listItems.length > 0 && listType) {
+            const ListTag = listType;
+            result.push(
+                <ListTag key={`list-${result.length}`} className={listType === 'ul' ? 'list-disc pl-4 my-1' : 'list-decimal pl-4 my-1'}>
+                    {listItems.map((item, i) => <li key={i} className="my-0.5">{parseInline(item)}</li>)}
+                </ListTag>
+            );
+            listItems = [];
+            listType = null;
+        }
+    };
+
+    const parseInline = (line: string): React.ReactNode => {
+        // Bold: **text** or __text__
+        const parts: React.ReactNode[] = [];
+        let remaining = line;
+        let key = 0;
+
+        while (remaining.length > 0) {
+            // Check for bold
+            const boldMatch = remaining.match(/\*\*(.+?)\*\*|__(.+?)__/);
+            if (boldMatch && boldMatch.index !== undefined) {
+                if (boldMatch.index > 0) {
+                    parts.push(remaining.slice(0, boldMatch.index));
+                }
+                parts.push(<strong key={key++} className="font-bold">{boldMatch[1] || boldMatch[2]}</strong>);
+                remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
+                continue;
+            }
+
+            // Check for links [text](url)
+            const linkMatch = remaining.match(/\[(.+?)\]\((.+?)\)/);
+            if (linkMatch && linkMatch.index !== undefined) {
+                if (linkMatch.index > 0) {
+                    parts.push(remaining.slice(0, linkMatch.index));
+                }
+                parts.push(
+                    <a
+                        key={key++}
+                        href={linkMatch[2]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline text-green-600 hover:text-green-700"
+                    >
+                        {linkMatch[1]}
+                    </a>
+                );
+                remaining = remaining.slice(linkMatch.index + linkMatch[0].length);
+                continue;
+            }
+
+            parts.push(remaining);
+            break;
+        }
+
+        return parts.length === 1 ? parts[0] : <>{parts}</>;
+    };
+
+    lines.forEach((line, index) => {
+        // Unordered list: - item or * item
+        const ulMatch = line.match(/^[\-\*]\s+(.+)$/);
+        if (ulMatch) {
+            if (listType !== 'ul') flushList();
+            listType = 'ul';
+            listItems.push(ulMatch[1]);
+            return;
+        }
+
+        // Ordered list: 1. item
+        const olMatch = line.match(/^\d+\.\s+(.+)$/);
+        if (olMatch) {
+            if (listType !== 'ol') flushList();
+            listType = 'ol';
+            listItems.push(olMatch[1]);
+            return;
+        }
+
+        flushList();
+
+        // Empty line
+        if (line.trim() === '') {
+            return;
+        }
+
+        // Regular paragraph
+        result.push(<p key={`p-${index}`} className="mb-1 last:mb-0">{parseInline(line)}</p>);
+    });
+
+    flushList();
+
+    return result;
+}
 
 interface ChatMessage {
     role: 'user' | 'assistant';
@@ -231,25 +330,7 @@ export default function ChatWidget() {
                                         }`}
                                 >
                                     <div className={`text-sm markdown-content ${message.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
-                                        <ReactMarkdown
-                                            components={{
-                                                a: ({ node, ...props }) => (
-                                                    <a
-                                                        {...props}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={`underline ${message.role === 'user' ? 'text-white' : 'text-green-600 hover:text-green-700'}`}
-                                                    />
-                                                ),
-                                                ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-4 my-1" />,
-                                                ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 my-1" />,
-                                                li: ({ node, ...props }) => <li {...props} className="my-0.5" />,
-                                                p: ({ node, ...props }) => <p {...props} className="mb-1 last:mb-0" />,
-                                                strong: ({ node, ...props }) => <span {...props} className="font-bold" />,
-                                            }}
-                                        >
-                                            {message.content}
-                                        </ReactMarkdown>
+                                        {parseSimpleMarkdown(message.content)}
                                     </div>
 
                                     {/* Farm Suggestions */}

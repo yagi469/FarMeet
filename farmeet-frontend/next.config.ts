@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     'date-fns',
     'react-day-picker',
-    'react-markdown',
     'lucide-react',
   ],
   images: {
