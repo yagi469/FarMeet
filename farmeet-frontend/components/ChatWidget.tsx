@@ -55,7 +55,7 @@ function parseSimpleMarkdown(text: string): React.ReactNode[] {
                         href={linkMatch[2]}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="underline text-green-600 hover:text-green-700"
+                        className="underline text-orange-600 hover:text-orange-700"
                     >
                         {linkMatch[1]}
                     </a>
@@ -242,7 +242,7 @@ export default function ChatWidget() {
                         <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r border-b border-gray-200 transform rotate-45"></div>
 
                         <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
                                 <span className="text-xl">🌿</span>
                             </div>
                             <div>
@@ -256,7 +256,7 @@ export default function ChatWidget() {
                         </div>
 
                         <button
-                            className="mt-3 w-full py-2 px-4 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                            className="mt-3 w-full py-2 px-4 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
                             onClick={handleOpenChat}
                         >
                             チャットを始める
@@ -270,13 +270,13 @@ export default function ChatWidget() {
                 {/* Pulse ring effect (only when closed) */}
                 {!isOpen && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="absolute h-16 w-16 rounded-full bg-green-400 animate-ping opacity-30"></div>
+                        <div className="absolute h-16 w-16 rounded-full bg-orange-400 animate-ping opacity-30"></div>
                     </div>
                 )}
 
                 <button
                     onClick={() => isOpen ? setIsOpen(false) : handleOpenChat()}
-                    className={`relative flex items-center gap-2 rounded-full bg-green-600 text-white shadow-lg transition-all hover:bg-green-700 hover:scale-105 ${isOpen ? 'h-14 w-14 justify-center' : 'h-14 px-5 pr-6'
+                    className={`relative flex items-center gap-2 rounded-full bg-orange-500 text-white shadow-lg transition-all hover:bg-orange-600 hover:scale-105 ${isOpen ? 'h-14 w-14 justify-center' : 'h-14 px-5 pr-6'
                         }`}
                     aria-label="チャットを開く"
                 >
@@ -295,7 +295,7 @@ export default function ChatWidget() {
             {isOpen && (
                 <div className="fixed z-50 flex flex-col overflow-hidden bg-white shadow-2xl border border-gray-200 animate-fade-in-up bottom-24 right-4 left-4 h-[70vh] max-h-[500px] rounded-2xl sm:left-auto sm:w-[380px]">
                     {/* Header */}
-                    <div className="bg-green-600 px-4 py-4 text-white shrink-0">
+                    <div className="bg-orange-500 px-4 py-4 text-white shrink-0">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 shrink-0">
@@ -303,7 +303,7 @@ export default function ChatWidget() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-lg">FarMeet アシスタント</h3>
-                                    <p className="text-sm text-green-100">AIがお手伝いします</p>
+                                    <p className="text-sm text-orange-100">AIがお手伝いします</p>
                                 </div>
                             </div>
                             <button
@@ -325,7 +325,7 @@ export default function ChatWidget() {
                             >
                                 <div
                                     className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${message.role === 'user'
-                                        ? 'bg-green-600 text-white rounded-br-md'
+                                        ? 'bg-orange-500 text-white rounded-br-md'
                                         : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-md'
                                         }`}
                                 >
@@ -344,7 +344,7 @@ export default function ChatWidget() {
                                                     className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                                                     onClick={() => setIsOpen(false)}
                                                 >
-                                                    <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center overflow-hidden shrink-0">
+                                                    <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center overflow-hidden shrink-0">
                                                         {farm.imageUrl ? (
                                                             <img
                                                                 src={farm.imageUrl}
@@ -387,7 +387,7 @@ export default function ChatWidget() {
                             <div className="flex justify-start">
                                 <div className="bg-white text-gray-800 shadow-sm border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
                                     <div className="flex items-center gap-2">
-                                        <Loader2 className="h-4 w-4 animate-spin text-green-600" />
+                                        <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
                                         <span className="text-sm text-gray-500">考え中...</span>
                                     </div>
                                 </div>
@@ -406,13 +406,13 @@ export default function ChatWidget() {
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="メッセージを入力..."
-                                className="flex-1 rounded-full border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                                className="flex-1 rounded-full border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
                                 disabled={isLoading}
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || isLoading}
-                                className="flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white transition-colors hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white transition-colors hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                             >
                                 <Send className="h-4 w-4" />
                             </button>
