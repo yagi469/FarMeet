@@ -440,7 +440,7 @@ export default function Home() {
           {/* タイトルと表示切替タブ */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <h2 className="text-2xl font-semibold text-gray-900">
-              {isSearched ? `検索結果（${farms.length}件）` : 'おすすめの農園'}
+              {isSearched ? `検索結果（${farms.length}件）` : 'すべての農園'}
             </h2>
 
             {/* リスト/マップ切り替えタブ - 強調デザイン */}
