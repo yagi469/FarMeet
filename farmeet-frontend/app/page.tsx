@@ -12,6 +12,7 @@ import LocationFilter from '@/components/LocationFilter';
 import DatePicker from '@/components/DatePicker';
 import GuestSelector from '@/components/GuestSelector';
 import SeasonCalendar from '@/components/SeasonCalendar';
+import FarmMapView from '@/components/FarmMapView';
 import { ProduceItem } from '@/lib/seasonData';
 
 // AI検索結果の型
@@ -42,11 +43,19 @@ export default function Home() {
   const [isSearched, setIsSearched] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [aiMessage, setAiMessage] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [showMapBadge, setShowMapBadge] = useState(true);
 
   useEffect(() => {
     loadFarms();
     // 最近見た農園を読み込み
     setRecentlyViewed(getRecentlyViewed());
+
+    // マップバッジの表示状態を確認
+    const hasSeenMap = localStorage.getItem('farmeet_has_seen_map');
+    if (hasSeenMap) {
+      setShowMapBadge(false);
+    }
   }, []);
 
   const loadFarms = async () => {
@@ -414,22 +423,84 @@ export default function Home() {
         </div>
       ) : (
         <>
-          <h2 className="text-2xl font-semibold mb-6 text-gray-900">
-            {isSearched ? `検索結果（${farms.length}件）` : 'おすすめの農園'}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
-            {farms.map((farm) => (
-              <FarmCard
-                key={farm.id}
-                farm={farm}
-                isFavorite={favoriteIds.has(farm.id)}
-                onFavoriteChange={handleFavoriteChange}
-                averageRating={ratingsMap.get(farm.id)?.avgRating}
-                reviewCount={ratingsMap.get(farm.id)?.count}
-                minPrice={pricesMap[farm.id]}
-              />
-            ))}
+          {/* タイトルと表示切替タブ */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900">
+              {isSearched ? `検索結果（${farms.length}件）` : 'おすすめの農園'}
+            </h2>
+
+            {/* リスト/マップ切り替えタブ - 強調デザイン */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 hidden sm:inline">表示:</span>
+              <div className="flex bg-gray-100 rounded-xl p-1 shadow-inner">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all ${viewMode === 'list'
+                    ? 'bg-white shadow-md text-gray-900 font-medium'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  <span className="text-sm">リスト</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setViewMode('map');
+                    if (showMapBadge) {
+                      setShowMapBadge(false);
+                      localStorage.setItem('farmeet_has_seen_map', 'true');
+                    }
+                  }}
+                  className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all ${viewMode === 'map'
+                    ? 'bg-green-600 shadow-md text-white font-medium'
+                    : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
+                    }`}
+                >
+                  {/* NEWバッジ */}
+                  {showMapBadge && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                      NEW
+                    </span>
+                  )}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-sm">地図で探す</span>
+                </button>
+              </div>
+            </div>
           </div>
+
+          {/* マップ表示 */}
+          {
+            viewMode === 'map' && (
+              <div className="mb-8">
+                <FarmMapView farms={farms} />
+              </div>
+            )
+          }
+
+          {/* リスト表示 */}
+          {
+            viewMode === 'list' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+                {farms.map((farm) => (
+                  <FarmCard
+                    key={farm.id}
+                    farm={farm}
+                    isFavorite={favoriteIds.has(farm.id)}
+                    onFavoriteChange={handleFavoriteChange}
+                    averageRating={ratingsMap.get(farm.id)?.avgRating}
+                    reviewCount={ratingsMap.get(farm.id)?.count}
+                    minPrice={pricesMap[farm.id]}
+                  />
+                ))}
+              </div>
+            )
+          }
         </>
       )}
     </div>
