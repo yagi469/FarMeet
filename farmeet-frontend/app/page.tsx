@@ -288,7 +288,7 @@ export default function Home() {
                   localStorage.setItem('farmeet_has_seen_map', 'true');
                 }
               }}
-              className="relative bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-full p-4 flex-1 md:flex-initial md:px-5 md:py-4 flex justify-center items-center gap-2 transition-all shadow-md"
+              className="relative bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 flex-1 md:flex-initial md:px-5 md:py-4 flex justify-center items-center gap-2 transition-all shadow-md"
             >
               {showMapBadge && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
