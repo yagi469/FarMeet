@@ -10,6 +10,7 @@ export interface User {
 
 export interface Farm {
     id: number;
+    publicId: string;
     name: string;
     description: string;
     location: string;

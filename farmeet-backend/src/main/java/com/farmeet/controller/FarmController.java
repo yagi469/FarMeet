@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/farms")
@@ -29,6 +30,15 @@ public class FarmController {
     public ResponseEntity<FarmDto> getFarmById(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(farmService.getFarmDtoById(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/p/{publicId}")
+    public ResponseEntity<FarmDto> getFarmByPublicId(@PathVariable UUID publicId) {
+        try {
+            return ResponseEntity.ok(farmService.getFarmDtoByPublicId(publicId));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

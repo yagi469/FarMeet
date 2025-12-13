@@ -5,6 +5,7 @@ const MAX_ITEMS = 10;
 
 export interface RecentlyViewedItem {
     id: number;
+    publicId?: string;
     name: string;
     imageUrl?: string;
     location: string;

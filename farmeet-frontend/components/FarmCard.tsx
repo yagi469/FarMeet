@@ -53,7 +53,7 @@ export default function FarmCard({ farm, isFavorite = false, onFavoriteChange, a
     };
 
     return (
-        <Link href={`/farms/${farm.id}`} target="_blank" rel="noopener noreferrer">
+        <Link href={`/farms/${farm.publicId || farm.id}`} target="_blank" rel="noopener noreferrer">
             <div className="group cursor-pointer">
                 <div className="relative overflow-hidden rounded-xl mb-3">
                     {!imageError && farm.imageUrl ? (

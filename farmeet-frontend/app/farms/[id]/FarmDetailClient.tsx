@@ -72,6 +72,7 @@ export default function FarmDetailClient({ farmId, initialFarm }: FarmDetailClie
             // 閲覧履歴に追加
             addToRecentlyViewed({
                 id: farmData.id,
+                publicId: farmData.publicId,
                 name: farmData.name,
                 imageUrl: farmData.imageUrl,
                 location: farmData.location,

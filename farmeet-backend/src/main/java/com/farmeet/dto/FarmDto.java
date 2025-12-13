@@ -1,6 +1,7 @@
 package com.farmeet.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.farmeet.entity.Farm;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.Data;
 @Data
 public class FarmDto {
     private Long id;
+    private UUID publicId;
     private String name;
     private String description;
     private String location;
@@ -21,6 +23,7 @@ public class FarmDto {
     public static FarmDto fromEntity(Farm farm) {
         FarmDto dto = new FarmDto();
         dto.setId(farm.getId());
+        dto.setPublicId(farm.getPublicId());
         dto.setName(farm.getName());
         dto.setDescription(farm.getDescription());
         dto.setLocation(farm.getLocation());

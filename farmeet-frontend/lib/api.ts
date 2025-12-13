@@ -145,6 +145,12 @@ class ApiClient {
         return response.json();
     }
 
+    async getFarmByPublicId(publicId: string) {
+        const response = await fetch(`${API_BASE_URL}/farms/p/${publicId}`);
+        if (!response.ok) throw new Error('Failed to get farm');
+        return response.json();
+    }
+
     async createFarm(data: { name: string; description: string; location: string; imageUrl?: string }) {
         const response = await fetch(`${API_BASE_URL}/farms`, {
             method: 'POST',

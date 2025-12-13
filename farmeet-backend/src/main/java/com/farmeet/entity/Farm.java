@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "farms")
@@ -20,6 +21,9 @@ public class Farm {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "public_id", unique = true, nullable = false, updatable = false)
+    private UUID publicId;
 
     @Column(nullable = false)
     private String name;
@@ -60,5 +64,8 @@ public class Farm {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (publicId == null) {
+            publicId = UUID.randomUUID();
+        }
     }
 }

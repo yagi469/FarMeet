@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +38,12 @@ public class FarmService {
 
     public FarmDto getFarmDtoById(Long id) {
         Farm farm = getFarmById(id);
+        return FarmDto.fromEntity(farm);
+    }
+
+    public FarmDto getFarmDtoByPublicId(UUID publicId) {
+        Farm farm = farmRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new RuntimeException("Farm not found"));
         return FarmDto.fromEntity(farm);
     }
 

@@ -292,7 +292,7 @@ export default function Home() {
             {recentlyViewed.map((item) => (
               <Link
                 key={item.id}
-                href={`/farms/${item.id}`}
+                href={`/farms/${item.publicId || item.id}`}
                 className="flex-shrink-0 w-48 group"
               >
                 <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-2">
