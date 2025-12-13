@@ -311,8 +311,10 @@ public class AiService {
 
         return farms.stream()
                 .filter(farm -> {
+                    String featuresStr = farm.getFeatures() != null ? String.join(" ", farm.getFeatures()) : "";
                     String farmInfo = (farm.getName() + " " + farm.getLocation() + " " +
-                            (farm.getDescription() != null ? farm.getDescription() : "")).toLowerCase();
+                            (farm.getDescription() != null ? farm.getDescription() : "") + " " +
+                            featuresStr).toLowerCase();
 
                     // Match by crop
                     if (criteria.crop != null && !farmInfo.contains(criteria.crop.toLowerCase())) {
@@ -324,8 +326,19 @@ public class AiService {
                         return false;
                     }
 
+                    // Match by familyFriendly
+                    if (criteria.familyFriendly) {
+                        boolean isFamilyFriendly = farmInfo.contains("子連れ") ||
+                                farmInfo.contains("家族") ||
+                                farmInfo.contains("子供") ||
+                                farmInfo.contains("キッズ");
+                        if (!isFamilyFriendly) {
+                            return false;
+                        }
+                    }
+
                     // If no criteria extracted, use keyword matching
-                    if (criteria.crop == null && criteria.location == null) {
+                    if (criteria.crop == null && criteria.location == null && !criteria.familyFriendly) {
                         // Check if any keyword from message matches farm info
                         String[] keywords = lowerMessage.split("[\\s、。]+");
                         for (String keyword : keywords) {
