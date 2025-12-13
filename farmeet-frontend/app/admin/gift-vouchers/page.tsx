@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Gift, Plus, Search, RefreshCw } from 'lucide-react';
+import { Gift, Plus, Search, RefreshCw, Copy, Link2, Check } from 'lucide-react';
 
 interface GiftVoucher {
     id: number;
@@ -26,6 +26,24 @@ export default function GiftVouchersPage() {
     const [issueAmount, setIssueAmount] = useState(3000);
     const [issueReason, setIssueReason] = useState('');
     const [issuing, setIssuing] = useState(false);
+    const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+    const getRedeemUrl = (code: string) => {
+        return `https://farmeet.vercel.app/gift/redeem/${code}`;
+    };
+
+    const handleCopyCode = async (code: string) => {
+        await navigator.clipboard.writeText(code);
+        setCopiedCode(code);
+        setTimeout(() => setCopiedCode(null), 2000);
+    };
+
+    const handleCopyLink = async (code: string) => {
+        const url = getRedeemUrl(code);
+        await navigator.clipboard.writeText(url);
+        setCopiedCode(`link-${code}`);
+        setTimeout(() => setCopiedCode(null), 2000);
+    };
 
     useEffect(() => {
         loadVouchers();
@@ -183,7 +201,33 @@ export default function GiftVouchersPage() {
                         ) : (
                             filteredVouchers.map((voucher) => (
                                 <tr key={voucher.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3 font-mono text-sm">{voucher.code}</td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono text-sm">{voucher.code}</span>
+                                            <button
+                                                onClick={() => handleCopyCode(voucher.code)}
+                                                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition"
+                                                title="コードをコピー"
+                                            >
+                                                {copiedCode === voucher.code ? (
+                                                    <Check className="w-4 h-4 text-green-500" />
+                                                ) : (
+                                                    <Copy className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => handleCopyLink(voucher.code)}
+                                                className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition"
+                                                title="共有リンクをコピー"
+                                            >
+                                                {copiedCode === `link-${voucher.code}` ? (
+                                                    <Check className="w-4 h-4 text-green-500" />
+                                                ) : (
+                                                    <Link2 className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    </td>
                                     <td className="px-4 py-3">¥{voucher.amount.toLocaleString()}</td>
                                     <td className="px-4 py-3">¥{voucher.balance.toLocaleString()}</td>
                                     <td className="px-4 py-3">{getStatusBadge(voucher.status)}</td>
