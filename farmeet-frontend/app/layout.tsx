@@ -28,6 +28,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.onerror = function(message, source, lineno, colno, error) {
+                alert('JS Error: ' + message + '\\n\\nSource: ' + source + '\\nLine: ' + lineno);
+                return false;
+              };
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
