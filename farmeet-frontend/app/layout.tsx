@@ -29,25 +29,16 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
-        {/* Eruda - Mobile debugging console (TEMPORARY - remove after debugging) */}
-        <script src="https://cdn.jsdelivr.net/npm/eruda" />
+        {/* TEMPORARY - Error handler for iOS 15 debugging */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              document.addEventListener('DOMContentLoaded', function() {
-                if (typeof eruda !== 'undefined') {
-                  eruda.init();
-                  // Make sure Eruda button is always on top and clickable
-                  var erudaEl = document.querySelector('.eruda-entry-btn');
-                  if (erudaEl) {
-                    erudaEl.style.zIndex = '2147483647';
-                    erudaEl.style.pointerEvents = 'auto';
-                  }
-                  var erudaContainer = document.getElementById('eruda');
-                  if (erudaContainer) {
-                    erudaContainer.style.zIndex = '2147483647';
-                  }
-                }
+              window.onerror = function(message, source, lineno, colno, error) {
+                alert('JS Error: ' + message + '\\n\\nSource: ' + source + '\\nLine: ' + lineno);
+                return false;
+              };
+              window.addEventListener('unhandledrejection', function(event) {
+                alert('Promise Rejection: ' + event.reason);
               });
             `,
           }}
