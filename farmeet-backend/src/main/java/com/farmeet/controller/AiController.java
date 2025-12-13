@@ -38,4 +38,22 @@ public class AiController {
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("AI service is running");
     }
+
+    /**
+     * 検索欄からのAIレコメンド用エンドポイント
+     */
+    @PostMapping("/recommend")
+    public ResponseEntity<ChatResponse> recommend(@RequestBody RecommendRequest request) {
+        if (request.getQuery() == null || request.getQuery().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(ChatResponse.error("検索キーワードを入力してください"));
+        }
+
+        ChatResponse response = aiService.recommend(request.getQuery());
+        return ResponseEntity.ok(response);
+    }
+
+    @lombok.Data
+    public static class RecommendRequest {
+        private String query;
+    }
 }

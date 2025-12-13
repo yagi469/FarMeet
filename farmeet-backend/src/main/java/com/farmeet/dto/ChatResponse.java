@@ -34,5 +34,16 @@ public class ChatResponse {
         private String name;
         private String location;
         private String imageUrl;
+        private Double rating; // 評価
+        private Integer reviewCount; // レビュー数
+        private String reason; // おすすめ理由
+
+        // 既存コードとの互換性のためのコンストラクタ
+        public FarmSuggestion(Long id, String name, String location, String imageUrl) {
+            this.id = id;
+            this.name = name;
+            this.location = location;
+            this.imageUrl = imageUrl;
+        }
     }
 }

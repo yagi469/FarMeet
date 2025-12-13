@@ -13,6 +13,9 @@ interface ChatMessage {
         name: string;
         location: string;
         imageUrl: string;
+        rating?: number;
+        reviewCount?: number;
+        reason?: string;
     }[];
 }
 
@@ -238,7 +241,7 @@ export default function ChatWidget() {
                                                     className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                                                     onClick={() => setIsOpen(false)}
                                                 >
-                                                    <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center overflow-hidden">
+                                                    <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center overflow-hidden shrink-0">
                                                         {farm.imageUrl ? (
                                                             <img
                                                                 src={farm.imageUrl}
@@ -253,10 +256,22 @@ export default function ChatWidget() {
                                                         <p className="text-sm font-medium text-gray-800 truncate">
                                                             {farm.name}
                                                         </p>
-                                                        <p className="text-xs text-gray-500 flex items-center gap-1">
-                                                            <MapPin className="h-3 w-3" />
-                                                            {farm.location}
-                                                        </p>
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                            <span className="flex items-center gap-1">
+                                                                <MapPin className="h-3 w-3" />
+                                                                {farm.location}
+                                                            </span>
+                                                            {farm.rating && (
+                                                                <span className="flex items-center gap-1">
+                                                                    ⭐ {farm.rating.toFixed(1)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {farm.reason && (
+                                                            <p className="text-xs text-purple-600 mt-1 line-clamp-2">
+                                                                💡 {farm.reason}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </Link>
                                             ))}

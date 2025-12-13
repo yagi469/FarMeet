@@ -1,17 +1,54 @@
 'use client';
 
 import { useState } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
+
+interface FarmSuggestion {
+    id: number;
+    name: string;
+    location: string;
+    imageUrl: string;
+    rating?: number;
+    reviewCount?: number;
+    reason?: string;
+}
 
 interface SearchBarProps {
     onSearch: (keyword: string) => void;
+    onAiSearch?: (suggestions: FarmSuggestion[], message: string) => void;
 }
 
-export default function SearchBar({ onSearch }: SearchBarProps) {
+export default function SearchBar({ onSearch, onAiSearch }: SearchBarProps) {
     const [keyword, setKeyword] = useState('');
+    const [isAiLoading, setIsAiLoading] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSearch(keyword);
+    };
+
+    const handleAiSearch = async () => {
+        if (!keyword.trim() || isAiLoading) return;
+
+        setIsAiLoading(true);
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/ai/recommend`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: keyword }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (onAiSearch) {
+                    onAiSearch(data.suggestions || [], data.message || '');
+                }
+            }
+        } catch (error) {
+            console.error('AI search error:', error);
+        } finally {
+            setIsAiLoading(false);
+        }
     };
 
     return (
@@ -24,7 +61,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
                     type="text"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
-                    placeholder="農園名や地域で検索..."
+                    placeholder="いちご狩り、子連れで楽しめる農園..."
                     className="flex-1 border-none focus:outline-none text-gray-700 placeholder-gray-400"
                 />
                 {keyword && (
@@ -41,6 +78,22 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
                         </svg>
                     </button>
                 )}
+                {/* AI Search Button */}
+                <button
+                    type="button"
+                    onClick={handleAiSearch}
+                    disabled={!keyword.trim() || isAiLoading}
+                    className="flex items-center gap-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full px-3 py-1.5 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="AIがおすすめの農園を提案します"
+                >
+                    {isAiLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <Sparkles className="w-4 h-4" />
+                    )}
+                    <span className="hidden sm:inline">AI</span>
+                </button>
+                {/* Normal Search Button */}
                 <button
                     type="submit"
                     className="bg-green-600 hover:bg-green-700 text-white rounded-full p-2 transition"
@@ -53,3 +106,4 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
         </form>
     );
 }
+

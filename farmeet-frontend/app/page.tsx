@@ -14,6 +14,17 @@ import GuestSelector from '@/components/GuestSelector';
 import SeasonCalendar from '@/components/SeasonCalendar';
 import { ProduceItem } from '@/lib/seasonData';
 
+// AI検索結果の型
+interface AiSuggestion {
+  id: number;
+  name: string;
+  location: string;
+  imageUrl: string;
+  rating?: number;
+  reviewCount?: number;
+  reason?: string;
+}
+
 export default function Home() {
   const [farms, setFarms] = useState<Farm[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +40,8 @@ export default function Home() {
   const [priceRange, setPriceRange] = useState<{ min?: number; max?: number }>({});
   const [pricesMap, setPricesMap] = useState<Record<number, number>>({});
   const [isSearched, setIsSearched] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [aiMessage, setAiMessage] = useState('');
 
   useEffect(() => {
     loadFarms();
@@ -100,6 +113,16 @@ export default function Home() {
 
   const handleSearch = (keyword: string) => {
     setSearchKeyword(keyword);
+    // Clear AI suggestions when doing regular search
+    setAiSuggestions([]);
+    setAiMessage('');
+  };
+
+  // AI検索結果を受け取るハンドラー
+  const handleAiSearch = (suggestions: AiSuggestion[], message: string) => {
+    setAiSuggestions(suggestions);
+    setAiMessage(message);
+    setIsSearched(true);
   };
 
   const handleLocationChange = (location: string) => {
@@ -179,7 +202,7 @@ export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* 検索バー */}
-      <SearchBar onSearch={handleSearch} />
+      <SearchBar onSearch={handleSearch} onAiSearch={handleAiSearch} />
 
       {/* Airbnb風検索エリア */}
       <div className="mb-12">
@@ -250,7 +273,73 @@ export default function Home() {
         <SeasonCalendar onProduceClick={handleProduceClick} />
       )}
 
-
+      {/* AIレコメンド結果 */}
+      {aiSuggestions.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">✨</span>
+            <h2 className="text-xl font-semibold text-gray-900">AIおすすめ農園</h2>
+            <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium px-2 py-1 rounded-full">
+              {aiMessage}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {aiSuggestions.map((suggestion) => (
+              <Link
+                key={suggestion.id}
+                href={`/farms/${suggestion.id}`}
+                className="group bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow"
+              >
+                <div className="aspect-[4/3] relative overflow-hidden">
+                  {suggestion.imageUrl ? (
+                    <img
+                      src={suggestion.imageUrl}
+                      alt={suggestion.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
+                      <span className="text-5xl">🌾</span>
+                    </div>
+                  )}
+                  {/* AI Badge */}
+                  <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                    <span>✨</span> AIおすすめ
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 text-lg group-hover:text-green-600 transition-colors">
+                    {suggestion.name}
+                  </h3>
+                  <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {suggestion.location}
+                  </p>
+                  {/* Rating */}
+                  {suggestion.rating && (
+                    <div className="flex items-center gap-1 mt-2">
+                      <span className="text-yellow-500">⭐</span>
+                      <span className="font-medium text-gray-900">{suggestion.rating.toFixed(1)}</span>
+                      {suggestion.reviewCount && (
+                        <span className="text-sm text-gray-500">({suggestion.reviewCount}件)</span>
+                      )}
+                    </div>
+                  )}
+                  {/* Recommendation Reason */}
+                  {suggestion.reason && (
+                    <p className="mt-3 text-sm text-gray-600 bg-purple-50 rounded-lg p-3 border-l-4 border-purple-400">
+                      💡 {suggestion.reason}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* カテゴリータブ - Airbnbスタイル */}
       <div className="flex gap-8 mb-8 overflow-x-auto pb-4 border-b">
