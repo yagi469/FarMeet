@@ -305,13 +305,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* シーズンカレンダー - 検索していないときのみ表示 */}
-      {!isSearched && (
+      {/* シーズンカレンダー - 検索していないときのみ表示（地図モード以外） */}
+      {!isSearched && viewMode !== 'map' && (
         <SeasonCalendar onProduceClick={handleProduceClick} />
       )}
 
-      {/* AIレコメンド結果 */}
-      {aiMessage && (
+      {/* AIレコメンド結果（地図モード以外） */}
+      {aiMessage && viewMode !== 'map' ? (
         <div className="mb-12">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">✨</span>
@@ -383,43 +383,44 @@ export default function Home() {
             </div>
           )}
         </div>
+      ) : null}
+
+      {/* カテゴリータブ - Airbnbスタイル（地図モード以外） */}
+      {viewMode !== 'map' && (
+        <div className="flex gap-8 mb-8 overflow-x-auto pb-4 border-b">
+          <button
+            onClick={() => handleCategoryChange('')}
+            className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === '' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+          >
+            <span className="text-2xl">🏠</span>
+            <span className="text-xs font-medium whitespace-nowrap">すべての農園</span>
+          </button>
+          <button
+            onClick={() => handleCategoryChange('FRUIT')}
+            className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'FRUIT' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+          >
+            <span className="text-2xl">🍇</span>
+            <span className="text-xs font-medium whitespace-nowrap">果物狩り</span>
+          </button>
+          <button
+            onClick={() => handleCategoryChange('VEGETABLE')}
+            className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'VEGETABLE' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+          >
+            <span className="text-2xl">🥕</span>
+            <span className="text-xs font-medium whitespace-nowrap">野菜収穫</span>
+          </button>
+          <button
+            onClick={() => handleCategoryChange('FLOWER')}
+            className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'FLOWER' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
+          >
+            <span className="text-2xl">🌸</span>
+            <span className="text-xs font-medium whitespace-nowrap">花摽み</span>
+          </button>
+        </div>
       )}
 
-      {/* カテゴリータブ - Airbnbスタイル */}
-      {/* カテゴリータブ - Airbnbスタイル */}
-      <div className="flex gap-8 mb-8 overflow-x-auto pb-4 border-b">
-        <button
-          onClick={() => handleCategoryChange('')}
-          className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === '' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
-        >
-          <span className="text-2xl">🏠</span>
-          <span className="text-xs font-medium whitespace-nowrap">すべての農園</span>
-        </button>
-        <button
-          onClick={() => handleCategoryChange('FRUIT')}
-          className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'FRUIT' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
-        >
-          <span className="text-2xl">🍇</span>
-          <span className="text-xs font-medium whitespace-nowrap">果物狩り</span>
-        </button>
-        <button
-          onClick={() => handleCategoryChange('VEGETABLE')}
-          className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'VEGETABLE' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
-        >
-          <span className="text-2xl">🥕</span>
-          <span className="text-xs font-medium whitespace-nowrap">野菜収穫</span>
-        </button>
-        <button
-          onClick={() => handleCategoryChange('FLOWER')}
-          className={`flex flex-col items-center gap-2 pb-3 border-b-2 transition ${selectedCategory === 'FLOWER' ? 'border-gray-900 opacity-100' : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-300'}`}
-        >
-          <span className="text-2xl">🌸</span>
-          <span className="text-xs font-medium whitespace-nowrap">花摽み</span>
-        </button>
-      </div>
-
-      {/* おすすめ農園レコメンド */}
-      {!isSearched && (
+      {/* おすすめ農園レコメンド（地図モード以外） */}
+      {!isSearched && viewMode !== 'map' && (
         <RecommendedFarms
           allFarms={farms}
           recentlyViewed={recentlyViewed}
@@ -430,8 +431,8 @@ export default function Home() {
         />
       )}
 
-      {/* 最近見た農園 - 検索していないときのみ表示 */}
-      {!isSearched && recentlyViewed.length > 0 && (
+      {/* 最近見た農園 - 検索していないときのみ表示（地図モード以外） */}
+      {!isSearched && viewMode !== 'map' && recentlyViewed.length > 0 && (
         <div className="mb-12">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">🕒 最近見た農園</h2>
           <div className="flex gap-4 overflow-x-auto pb-4">
@@ -469,87 +470,43 @@ export default function Home() {
         <div className="text-center py-24">
           <p className="text-gray-500 text-lg">まだ農園が登録されていません</p>
         </div>
-      ) : (
-        <>
-          {/* タイトルと表示切替タブ */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              {isSearched && !aiMessage ? `検索結果（${farms.length}件）` : 'すべての農園'}
-            </h2>
-
-            {/* リスト/マップ切り替えタブ - 強調デザイン */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 hidden sm:inline">表示:</span>
-              <div className="flex bg-gray-100 rounded-xl p-1 shadow-inner">
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all ${viewMode === 'list'
-                    ? 'bg-white shadow-md text-gray-900 font-medium'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  <span className="text-sm">リスト</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setViewMode('map');
-                    if (showMapBadge) {
-                      setShowMapBadge(false);
-                      localStorage.setItem('farmeet_has_seen_map', 'true');
-                    }
-                  }}
-                  className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all ${viewMode === 'map'
-                    ? 'bg-green-600 shadow-md text-white font-medium'
-                    : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
-                    }`}
-                >
-                  {/* NEWバッジ */}
-                  {showMapBadge && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
-                      NEW
-                    </span>
-                  )}
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="text-sm">地図で探す</span>
-                </button>
-              </div>
-            </div>
+      ) : viewMode === 'map' ? (
+        /* 地図モード - 地図のみ表示 */
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">📍 地図で農園を探す</h2>
+            <button
+              onClick={() => setViewMode('list')}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              リストに戻る
+            </button>
           </div>
-
-          {/* マップ表示 */}
-          {
-            viewMode === 'map' && (
-              <div className="mb-8">
-                <FarmMapView farms={farms} />
-              </div>
-            )
-          }
-
-          {/* リスト表示 */}
-          {
-            viewMode === 'list' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
-                {farms.map((farm) => (
-                  <FarmCard
-                    key={farm.id}
-                    farm={farm}
-                    isFavorite={favoriteIds.has(farm.id)}
-                    onFavoriteChange={handleFavoriteChange}
-                    averageRating={ratingsMap.get(farm.id)?.avgRating}
-                    reviewCount={ratingsMap.get(farm.id)?.count}
-                    minPrice={pricesMap[farm.id]}
-                  />
-                ))}
-              </div>
-            )
-          }
-        </>
+          <FarmMapView farms={farms} />
+        </div>
+      ) : (
+        /* リスト表示 */
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+            {isSearched && !aiMessage ? `検索結果（${farms.length}件）` : 'すべての農園'}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+            {farms.map((farm) => (
+              <FarmCard
+                key={farm.id}
+                farm={farm}
+                isFavorite={favoriteIds.has(farm.id)}
+                onFavoriteChange={handleFavoriteChange}
+                averageRating={ratingsMap.get(farm.id)?.avgRating}
+                reviewCount={ratingsMap.get(farm.id)?.count}
+                minPrice={pricesMap[farm.id]}
+              />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
