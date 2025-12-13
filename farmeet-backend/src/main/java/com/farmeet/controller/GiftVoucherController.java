@@ -55,6 +55,22 @@ public class GiftVoucherController {
     }
 
     /**
+     * 管理者用: 全ギフト券一覧取得
+     */
+    @GetMapping("/admin/all")
+    public ResponseEntity<?> getAllVouchersForAdmin(@AuthenticationPrincipal User admin) {
+        try {
+            if (!"ADMIN".equals(admin.getRole().name())) {
+                return ResponseEntity.status(403).body(Map.of("error", "権限がありません"));
+            }
+            List<GiftVoucherDto> vouchers = giftVoucherService.getAllVouchers();
+            return ResponseEntity.ok(vouchers);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * ギフト券を有効化（決済完了後）
      */
     @PostMapping("/activate/{voucherId}")

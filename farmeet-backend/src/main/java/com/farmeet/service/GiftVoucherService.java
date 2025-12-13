@@ -347,6 +347,16 @@ public class GiftVoucherService {
     }
 
     /**
+     * 管理者用: 全ギフト券一覧を取得
+     */
+    public List<GiftVoucherDto> getAllVouchers() {
+        return giftVoucherRepository.findAll()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * ユーザーの使用可能なギフト券一覧を取得
      */
     public List<GiftVoucherDto.UsableVoucher> getUsableVouchers(User user) {

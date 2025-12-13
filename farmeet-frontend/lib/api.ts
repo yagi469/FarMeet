@@ -1046,6 +1046,47 @@ class ApiClient {
         if (!response.ok) throw new Error('ギフト券一覧の取得に失敗しました');
         return response.json();
     }
+
+    // ========== 管理者: ギフト券管理 ==========
+
+    async adminGetGiftVouchers(): Promise<{
+        id: number;
+        code: string;
+        amount: number;
+        balance: number;
+        status: string;
+        expiresAt: string;
+        createdAt: string;
+        isFreeIssue?: boolean;
+        issueReason?: string;
+        purchaserName?: string;
+        redeemerName?: string;
+    }[]> {
+        const response = await fetch(`${API_BASE_URL}/gift-vouchers/admin/all`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('ギフト券一覧の取得に失敗しました');
+        return response.json();
+    }
+
+    async adminIssueGiftVoucher(amount: number, issueReason?: string): Promise<{
+        success: boolean;
+        voucherId: number;
+        code: string;
+        amount: number;
+        expiresAt: string;
+    }> {
+        const response = await fetch(`${API_BASE_URL}/gift-vouchers/admin/issue`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ amount, issueReason }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'ギフト券の発行に失敗しました');
+        }
+        return response.json();
+    }
 }
 
 export const api = new ApiClient();
