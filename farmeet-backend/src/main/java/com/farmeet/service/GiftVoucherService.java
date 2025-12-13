@@ -100,7 +100,7 @@ public class GiftVoucherService {
             User admin) {
 
         // 管理者権限チェック
-        if (admin.getRole() != Role.ADMIN) {
+        if (admin.getRole() != User.Role.ADMIN) {
             throw new RuntimeException("管理者権限が必要です");
         }
 
