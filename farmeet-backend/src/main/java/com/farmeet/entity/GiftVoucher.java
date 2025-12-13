@@ -39,10 +39,15 @@ public class GiftVoucher {
     @Column(nullable = false)
     private GiftVoucherStatus status = GiftVoucherStatus.PENDING;
 
-    /** 購入者 */
+    /** 購入者（有料購入の場合） */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "purchaser_id")
     private User purchaser;
+
+    /** 発行した管理者（無料発行の場合） */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "issued_by_id")
+    private User issuedBy;
 
     /** 現在の所有者（登録後） */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,6 +66,14 @@ public class GiftVoucher {
     @Column(columnDefinition = "TEXT")
     private String message;
 
+    /** 無料発行フラグ */
+    @Column(name = "is_free_issue")
+    private boolean freeIssue = false;
+
+    /** 発行理由（無料発行の場合） */
+    @Column(name = "issue_reason")
+    private String issueReason;
+
     /** 購入時の決済方法 */
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method")
@@ -78,7 +91,7 @@ public class GiftVoucher {
     @Column(name = "paypay_payment_id")
     private String paypayPaymentId;
 
-    /** 有効期限（購入から1年） */
+    /** 有効期限 */
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 

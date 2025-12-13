@@ -40,6 +40,21 @@ public class GiftVoucherController {
     }
 
     /**
+     * 管理者による無料ギフト券発行
+     */
+    @PostMapping("/admin/issue")
+    public ResponseEntity<?> issueGiftVoucherByAdmin(
+            @RequestBody GiftVoucherDto.AdminIssueRequest request,
+            @AuthenticationPrincipal User admin) {
+        try {
+            GiftVoucherDto.AdminIssueResponse response = giftVoucherService.issueGiftVoucherByAdmin(request, admin);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * ギフト券を有効化（決済完了後）
      */
     @PostMapping("/activate/{voucherId}")
