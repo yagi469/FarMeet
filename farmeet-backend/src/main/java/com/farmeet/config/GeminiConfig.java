@@ -12,7 +12,7 @@ public class GeminiConfig {
     @Value("${gemini.api-key:}")
     private String apiKey;
 
-    @Value("${gemini.model:gemini-1.5-flash}")
+    @Value("${gemini.model:gemini-2.0-flash-lite}")
     private String model;
 
     @Bean
