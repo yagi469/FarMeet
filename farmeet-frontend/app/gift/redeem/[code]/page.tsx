@@ -192,16 +192,22 @@ export default function RedeemPage() {
                 ) : (
                     <button
                         onClick={handleRedeem}
-                        disabled={redeeming || !voucherInfo?.isUsable}
+                        disabled={redeeming || voucherInfo?.status !== 'ACTIVE'}
                         className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         {redeeming ? '登録中...' : 'このギフト券を登録する'}
                     </button>
                 )}
 
-                {voucherInfo && !voucherInfo.isUsable && (
+                {voucherInfo && voucherInfo.status !== 'ACTIVE' && (
                     <p className="text-sm text-red-500 text-center mt-3">
-                        このギフト券は既に使用済みか、有効期限が切れています
+                        {voucherInfo.status === 'REDEEMED'
+                            ? 'このギフト券は既に登録済みです'
+                            : voucherInfo.status === 'USED'
+                                ? 'このギフト券は使用済みです'
+                                : voucherInfo.status === 'EXPIRED'
+                                    ? 'このギフト券は有効期限が切れています'
+                                    : 'このギフト券は登録できません'}
                     </p>
                 )}
             </div>
