@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, MapPin } from 'lucide-react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessage {
     role: 'user' | 'assistant';
@@ -228,7 +230,28 @@ export default function ChatWidget() {
                                         : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-md'
                                         }`}
                                 >
-                                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                    <div className={`text-sm markdown-content ${message.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                a: ({ node, ...props }) => (
+                                                    <a
+                                                        {...props}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={`underline ${message.role === 'user' ? 'text-white' : 'text-green-600 hover:text-green-700'}`}
+                                                    />
+                                                ),
+                                                ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-4 my-1" />,
+                                                ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 my-1" />,
+                                                li: ({ node, ...props }) => <li {...props} className="my-0.5" />,
+                                                p: ({ node, ...props }) => <p {...props} className="mb-1 last:mb-0" />,
+                                                strong: ({ node, ...props }) => <span {...props} className="font-bold" />,
+                                            }}
+                                        >
+                                            {message.content}
+                                        </ReactMarkdown>
+                                    </div>
 
                                     {/* Farm Suggestions */}
                                     {message.suggestions && message.suggestions.length > 0 && (
