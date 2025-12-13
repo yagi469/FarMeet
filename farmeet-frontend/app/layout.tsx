@@ -34,9 +34,21 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              if (typeof eruda !== 'undefined') {
-                eruda.init();
-              }
+              document.addEventListener('DOMContentLoaded', function() {
+                if (typeof eruda !== 'undefined') {
+                  eruda.init();
+                  // Make sure Eruda button is always on top and clickable
+                  var erudaEl = document.querySelector('.eruda-entry-btn');
+                  if (erudaEl) {
+                    erudaEl.style.zIndex = '2147483647';
+                    erudaEl.style.pointerEvents = 'auto';
+                  }
+                  var erudaContainer = document.getElementById('eruda');
+                  if (erudaContainer) {
+                    erudaContainer.style.zIndex = '2147483647';
+                  }
+                }
+              });
             `,
           }}
         />
