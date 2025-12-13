@@ -284,6 +284,22 @@ class ApiClient {
         return response.json();
     }
 
+    async getActiveReservations() {
+        const response = await fetch(`${API_BASE_URL}/reservations/active`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get active reservations');
+        return response.json();
+    }
+
+    async getHistoryReservations() {
+        const response = await fetch(`${API_BASE_URL}/reservations/history`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('Failed to get history reservations');
+        return response.json();
+    }
+
     async getFarmerReservations() {
         const response = await fetch(`${API_BASE_URL}/reservations/farmer`, {
             headers: getAuthHeaders(),

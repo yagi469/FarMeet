@@ -20,6 +20,16 @@ import java.util.Optional;
 @Service
 public class ReservationService {
 
+    private static final List<Reservation.ReservationStatus> ACTIVE_STATUSES = List.of(
+            Reservation.ReservationStatus.CONFIRMED,
+            Reservation.ReservationStatus.PENDING_PAYMENT,
+            Reservation.ReservationStatus.AWAITING_TRANSFER);
+
+    private static final List<Reservation.ReservationStatus> HISTORY_STATUSES = List.of(
+            Reservation.ReservationStatus.CANCELLED,
+            Reservation.ReservationStatus.COMPLETED,
+            Reservation.ReservationStatus.PAYMENT_FAILED);
+
     @Autowired
     private ReservationRepository reservationRepository;
 
@@ -34,6 +44,14 @@ public class ReservationService {
 
     public List<Reservation> getUserReservations(Long userId) {
         return reservationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    public List<Reservation> getActiveReservations(Long userId) {
+        return reservationRepository.findActiveByUserId(userId, ACTIVE_STATUSES);
+    }
+
+    public List<Reservation> getHistoryReservations(Long userId) {
+        return reservationRepository.findHistoryByUserId(userId, HISTORY_STATUSES);
     }
 
     public List<Reservation> getFarmerReservations(Long farmerId) {

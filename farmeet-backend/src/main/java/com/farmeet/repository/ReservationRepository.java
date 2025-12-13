@@ -25,10 +25,34 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                         @Param("status") ReservationStatus status,
                         @Param("now") LocalDateTime now);
 
+        // イベント開始が指定時刻より前の未決済予約を検索（自動キャンセル用）
+        @Query("SELECT r FROM Reservation r WHERE r.status IN :statuses AND r.event.eventDate < :deadline")
+        List<Reservation> findPendingByEventDateBefore(
+                        @Param("statuses") List<ReservationStatus> statuses,
+                        @Param("deadline") LocalDateTime deadline);
+
         // ユーザーが特定の農園で体験済みの予約があるかチェック
         @Query("SELECT COUNT(r) > 0 FROM Reservation r WHERE r.user.id = :userId AND r.event.farm.id = :farmId AND r.status = :status")
         boolean existsByUserIdAndFarmIdAndStatus(
                         @Param("userId") Long userId,
                         @Param("farmId") Long farmId,
                         @Param("status") ReservationStatus status);
+
+        // 支払い期限切れの予約を検索（自動キャンセル用）
+        @Query("SELECT r FROM Reservation r WHERE r.status IN :statuses AND r.createdAt < :deadline")
+        List<Reservation> findExpiredPendingPaymentReservations(
+                        @Param("statuses") List<ReservationStatus> statuses,
+                        @Param("deadline") LocalDateTime deadline);
+
+        // アクティブな予約を取得（CONFIRMED, PENDING_PAYMENT, AWAITING_TRANSFER）
+        @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId AND r.status IN :statuses ORDER BY r.createdAt DESC")
+        List<Reservation> findActiveByUserId(
+                        @Param("userId") Long userId,
+                        @Param("statuses") List<ReservationStatus> statuses);
+
+        // 履歴の予約を取得（CANCELLED, COMPLETED, PAYMENT_FAILED）
+        @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId AND r.status IN :statuses ORDER BY r.createdAt DESC")
+        List<Reservation> findHistoryByUserId(
+                        @Param("userId") Long userId,
+                        @Param("statuses") List<ReservationStatus> statuses);
 }

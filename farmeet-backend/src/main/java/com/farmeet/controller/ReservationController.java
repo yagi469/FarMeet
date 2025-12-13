@@ -29,6 +29,24 @@ public class ReservationController {
         return ResponseEntity.ok(reservations);
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<List<ReservationDto>> getActiveReservations(@AuthenticationPrincipal User user) {
+        List<ReservationDto> reservations = reservationService.getActiveReservations(user.getId())
+                .stream()
+                .map(ReservationDto::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(reservations);
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<ReservationDto>> getHistoryReservations(@AuthenticationPrincipal User user) {
+        List<ReservationDto> reservations = reservationService.getHistoryReservations(user.getId())
+                .stream()
+                .map(ReservationDto::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(reservations);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ReservationDto> getReservationById(@PathVariable Long id,
             @AuthenticationPrincipal User user) {

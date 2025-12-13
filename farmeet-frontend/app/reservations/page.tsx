@@ -12,10 +12,14 @@ interface PaymentInfo {
     paymentStatus: string;
 }
 
+type TabType = 'active' | 'history';
+
 export default function ReservationsPage() {
     const router = useRouter();
     const pathname = usePathname();
-    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [activeTab, setActiveTab] = useState<TabType>('active');
+    const [activeReservations, setActiveReservations] = useState<Reservation[]>([]);
+    const [historyReservations, setHistoryReservations] = useState<Reservation[]>([]);
     const [payments, setPayments] = useState<Record<number, PaymentInfo>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -30,13 +34,18 @@ export default function ReservationsPage() {
 
     const loadReservations = async () => {
         try {
-            const data = await api.getReservations();
-            setReservations(data);
+            const [activeData, historyData] = await Promise.all([
+                api.getActiveReservations(),
+                api.getHistoryReservations()
+            ]);
+            setActiveReservations(activeData);
+            setHistoryReservations(historyData);
             setError(null);
 
             // 各予約の決済情報を取得
+            const allReservations = [...activeData, ...historyData];
             const paymentData: Record<number, PaymentInfo> = {};
-            for (const res of data) {
+            for (const res of allReservations) {
                 try {
                     const payment = await api.getPaymentByReservation(res.id);
                     if (payment) {
@@ -50,7 +59,8 @@ export default function ReservationsPage() {
         } catch (err) {
             console.error('予約読み込みエラー:', err);
             setError('予約の読み込みに失敗しました');
-            setReservations([]);
+            setActiveReservations([]);
+            setHistoryReservations([]);
         } finally {
             setLoading(false);
         }
@@ -77,6 +87,38 @@ export default function ReservationsPage() {
             BANK_TRANSFER: '銀行振込',
         };
         return labels[method] || method;
+    };
+
+    // 残り時間を計算（支払い期限 or イベント3時間前の早い方）
+    const getRemainingTime = (reservation: Reservation): string | null => {
+        const status = reservation.status;
+        if (status !== 'PENDING_PAYMENT' && status !== 'AWAITING_TRANSFER') {
+            return null;
+        }
+
+        const now = new Date();
+        const createdAt = new Date(reservation.createdAt);
+        const paymentDeadline = new Date(createdAt.getTime() + 48 * 60 * 60 * 1000); // 48時間後
+        const eventDate = new Date(reservation.event.eventDate);
+        const eventDeadline = new Date(eventDate.getTime() - 3 * 60 * 60 * 1000); // イベント3時間前
+
+        // 早い方を選択
+        const deadline = paymentDeadline < eventDeadline ? paymentDeadline : eventDeadline;
+        const diff = deadline.getTime() - now.getTime();
+
+        if (diff <= 0) return '期限切れ';
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (hours >= 24) {
+            const days = Math.floor(hours / 24);
+            return `残り${days}日`;
+        }
+        if (hours > 0) {
+            return `残り${hours}時間`;
+        }
+        return `残り${minutes}分`;
     };
 
     if (loading) {
@@ -113,9 +155,43 @@ export default function ReservationsPage() {
         );
     };
 
+    const currentReservations = activeTab === 'active' ? activeReservations : historyReservations;
+
     return (
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <h1 className="text-3xl font-bold mb-8">予約一覧</h1>
+            <h1 className="text-3xl font-bold mb-6">予約一覧</h1>
+
+            {/* タブUI */}
+            <div className="flex border-b border-gray-200 mb-6">
+                <button
+                    onClick={() => setActiveTab('active')}
+                    className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'active'
+                            ? 'border-green-600 text-green-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    アクティブ
+                    {activeReservations.length > 0 && (
+                        <span className="ml-2 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">
+                            {activeReservations.length}
+                        </span>
+                    )}
+                </button>
+                <button
+                    onClick={() => setActiveTab('history')}
+                    className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'history'
+                            ? 'border-green-600 text-green-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        }`}
+                >
+                    履歴
+                    {historyReservations.length > 0 && (
+                        <span className="ml-2 bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full text-xs">
+                            {historyReservations.length}
+                        </span>
+                    )}
+                </button>
+            </div>
 
             {error ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
@@ -133,79 +209,92 @@ export default function ReservationsPage() {
                         ホームに戻る
                     </button>
                 </div>
-            ) : reservations.length === 0 ? (
+            ) : currentReservations.length === 0 ? (
                 <div className="bg-gray-50 rounded-lg p-12 text-center">
-                    <p className="text-gray-500 mb-4">まだ予約がありません</p>
-                    <button
-                        onClick={() => router.push('/')}
-                        className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
-                    >
-                        農園を探す
-                    </button>
+                    <p className="text-gray-500 mb-4">
+                        {activeTab === 'active' ? 'アクティブな予約がありません' : '予約履歴がありません'}
+                    </p>
+                    {activeTab === 'active' && (
+                        <button
+                            onClick={() => router.push('/')}
+                            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+                        >
+                            農園を探す
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {reservations.map((reservation) => (
-                        <div
-                            key={reservation.id}
-                            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-                            onClick={() => router.push(`/reservations/${reservation.id}`)}
-                        >
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h2 className="text-xl font-semibold mb-2">
-                                        {reservation.event.title}
-                                    </h2>
-                                    <p className="text-gray-600">{reservation.event.farm.name}</p>
+                    {currentReservations.map((reservation) => {
+                        const remainingTime = getRemainingTime(reservation);
+                        return (
+                            <div
+                                key={reservation.id}
+                                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                                onClick={() => router.push(`/reservations/${reservation.id}`)}
+                            >
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h2 className="text-xl font-semibold mb-2">
+                                            {reservation.event.title}
+                                        </h2>
+                                        <p className="text-gray-600">{reservation.event.farm.name}</p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                        {getStatusBadge(reservation.status)}
+                                        {remainingTime && (
+                                            <span className={`text-xs font-medium ${remainingTime === '期限切れ' ? 'text-red-600' : 'text-orange-600'
+                                                }`}>
+                                                ⏰ {remainingTime}
+                                            </span>
+                                        )}
+                                        {payments[reservation.id] && (
+                                            <span className="text-xs text-gray-500">
+                                                {getPaymentMethodLabel(payments[reservation.id].paymentMethod)}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
-                                    {getStatusBadge(reservation.status)}
-                                    {payments[reservation.id] && (
-                                        <span className="text-xs text-gray-500">
-                                            {getPaymentMethodLabel(payments[reservation.id].paymentMethod)}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <p className="text-sm text-gray-500">開催日時</p>
-                                    <p className="font-medium">
-                                        {new Date(reservation.event.eventDate).toLocaleString('ja-JP')}
-                                    </p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <p className="text-sm text-gray-500">開催日時</p>
+                                        <p className="font-medium">
+                                            {new Date(reservation.event.eventDate).toLocaleString('ja-JP')}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">参加人数</p>
+                                        <p className="font-medium">{reservation.numberOfPeople}名</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">合計金額</p>
+                                        <p className="font-medium text-green-600">
+                                            ¥{reservation.totalPrice.toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">予約日時</p>
+                                        <p className="font-medium">
+                                            {new Date(reservation.createdAt).toLocaleString('ja-JP')}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">参加人数</p>
-                                    <p className="font-medium">{reservation.numberOfPeople}名</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">合計金額</p>
-                                    <p className="font-medium text-green-600">
-                                        ¥{reservation.totalPrice.toLocaleString()}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">予約日時</p>
-                                    <p className="font-medium">
-                                        {new Date(reservation.createdAt).toLocaleString('ja-JP')}
-                                    </p>
-                                </div>
-                            </div>
 
-                            {reservation.status === 'CONFIRMED' && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleCancel(reservation.id);
-                                    }}
-                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-                                >
-                                    予約をキャンセル
-                                </button>
-                            )}
-                        </div>
-                    ))}
+                                {reservation.status === 'CONFIRMED' && activeTab === 'active' && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCancel(reservation.id);
+                                        }}
+                                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+                                    >
+                                        予約をキャンセル
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>
