@@ -41,7 +41,8 @@ export default function SearchBar({ onSearch, onAiSearch }: SearchBarProps) {
             if (response.ok) {
                 const data = await response.json();
                 if (onAiSearch) {
-                    onAiSearch(data.suggestions || [], data.message || '');
+                    const message = data.message || data.error || '';
+                    onAiSearch(data.suggestions || [], message);
                 }
             }
         } catch (error) {

@@ -284,7 +284,7 @@ export default function Home() {
       )}
 
       {/* AIレコメンド結果 */}
-      {aiSuggestions.length > 0 && (
+      {aiMessage && (
         <div className="mb-12">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">✨</span>
@@ -293,61 +293,68 @@ export default function Home() {
               {aiMessage}
             </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {aiSuggestions.map((suggestion) => (
-              <Link
-                key={suggestion.id}
-                href={`/farms/${suggestion.id}`}
-                className="group bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow"
-              >
-                <div className="aspect-[4/3] relative overflow-hidden">
-                  {suggestion.imageUrl ? (
-                    <img
-                      src={suggestion.imageUrl}
-                      alt={suggestion.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
-                      <span className="text-5xl">🌾</span>
+          {aiSuggestions.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {aiSuggestions.map((suggestion) => (
+                <Link
+                  key={suggestion.id}
+                  href={`/farms/${suggestion.id}`}
+                  className="group bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow"
+                >
+                  <div className="aspect-[4/3] relative overflow-hidden">
+                    {suggestion.imageUrl ? (
+                      <img
+                        src={suggestion.imageUrl}
+                        alt={suggestion.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-green-200">
+                        <span className="text-5xl">🌾</span>
+                      </div>
+                    )}
+                    {/* AI Badge */}
+                    <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                      <span>✨</span> AIおすすめ
                     </div>
-                  )}
-                  {/* AI Badge */}
-                  <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
-                    <span>✨</span> AIおすすめ
                   </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-900 text-lg group-hover:text-green-600 transition-colors">
-                    {suggestion.name}
-                  </h3>
-                  <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {suggestion.location}
-                  </p>
-                  {/* Rating */}
-                  {suggestion.rating && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <span className="text-yellow-500">⭐</span>
-                      <span className="font-medium text-gray-900">{suggestion.rating.toFixed(1)}</span>
-                      {suggestion.reviewCount && (
-                        <span className="text-sm text-gray-500">({suggestion.reviewCount}件)</span>
-                      )}
-                    </div>
-                  )}
-                  {/* Recommendation Reason */}
-                  {suggestion.reason && (
-                    <p className="mt-3 text-sm text-gray-600 bg-purple-50 rounded-lg p-3 border-l-4 border-purple-400">
-                      💡 {suggestion.reason}
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-900 text-lg group-hover:text-green-600 transition-colors">
+                      {suggestion.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {suggestion.location}
                     </p>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
+                    {/* Rating */}
+                    {suggestion.rating && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <span className="text-yellow-500">⭐</span>
+                        <span className="font-medium text-gray-900">{suggestion.rating.toFixed(1)}</span>
+                        {suggestion.reviewCount && (
+                          <span className="text-sm text-gray-500">({suggestion.reviewCount}件)</span>
+                        )}
+                      </div>
+                    )}
+                    {/* Recommendation Reason */}
+                    {suggestion.reason && (
+                      <p className="mt-3 text-sm text-gray-600 bg-purple-50 rounded-lg p-3 border-l-4 border-purple-400">
+                        💡 {suggestion.reason}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100">
+              <span className="text-4xl block mb-2">🤔</span>
+              <p className="text-gray-500">条件に一致する農園が見つかりませんでした。<br />別のキーワードや表現で検索してみてください。</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -440,7 +447,7 @@ export default function Home() {
           {/* タイトルと表示切替タブ */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <h2 className="text-2xl font-semibold text-gray-900">
-              {isSearched ? `検索結果（${farms.length}件）` : 'すべての農園'}
+              {isSearched && !aiMessage ? `検索結果（${farms.length}件）` : 'すべての農園'}
             </h2>
 
             {/* リスト/マップ切り替えタブ - 強調デザイン */}
