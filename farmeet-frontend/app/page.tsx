@@ -126,6 +126,8 @@ export default function Home() {
     // Clear AI suggestions when doing regular search
     setAiSuggestions([]);
     setAiMessage('');
+    // Actually perform the search
+    performSearch(keyword, selectedLocation, selectedDate, adults, children, selectedCategory, priceRange.min, priceRange.max);
   };
 
   // AI検索結果を受け取るハンドラー
