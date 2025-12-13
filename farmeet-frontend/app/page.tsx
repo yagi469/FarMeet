@@ -277,6 +277,28 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </button>
+          {/* 地図で探すボタン */}
+          <button
+            onClick={() => {
+              setViewMode('map');
+              if (showMapBadge) {
+                setShowMapBadge(false);
+                localStorage.setItem('farmeet_has_seen_map', 'true');
+              }
+            }}
+            className="relative bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white rounded-full p-4 md:px-5 md:py-4 w-full md:w-auto flex justify-center items-center gap-2 transition-all shadow-md"
+          >
+            {showMapBadge && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                NEW
+              </span>
+            )}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="font-bold text-sm">地図</span>
+          </button>
         </div>
       </div>
 
