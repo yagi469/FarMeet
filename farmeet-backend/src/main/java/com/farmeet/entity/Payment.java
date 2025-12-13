@@ -34,6 +34,7 @@ public class Payment {
     @Column(name = "payment_status", nullable = false)
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
+    /** 決済額（ギフト券適用後の実際の決済額） */
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
@@ -64,6 +65,15 @@ public class Payment {
     @Column(name = "refunded_at")
     private LocalDateTime refundedAt;
 
+    /** ギフト券使用額 */
+    @Column(name = "voucher_amount", precision = 10, scale = 2)
+    private BigDecimal voucherAmount = BigDecimal.ZERO;
+
+    /** 使用したギフト券 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "used_voucher_id")
+    private GiftVoucher usedVoucher;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -79,5 +89,12 @@ public class Payment {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 予約の合計金額（ギフト券適用前）を取得
+     */
+    public BigDecimal getTotalAmount() {
+        return amount.add(voucherAmount != null ? voucherAmount : BigDecimal.ZERO);
     }
 }

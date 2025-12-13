@@ -17,7 +17,6 @@ public class ReservationDto {
     private Integer numberOfInfants;
     private String status;
     private BigDecimal totalPrice;
-    private String inviteCode;
     private LocalDateTime createdAt;
 
     @Data
@@ -50,7 +49,6 @@ public class ReservationDto {
         dto.setNumberOfInfants(reservation.getNumberOfInfants());
         dto.setStatus(reservation.getStatus().name());
         dto.setTotalPrice(reservation.getTotalPrice());
-        dto.setInviteCode(reservation.getInviteCode());
         dto.setCreatedAt(reservation.getCreatedAt());
         return dto;
     }

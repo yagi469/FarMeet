@@ -39,7 +39,7 @@ export default function Header() {
                         {!isLoading && isAuthenticated && (
                             <>
                                 <Link href="/favorites" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition">
-                                    ❤️ お気に入り
+                                    お気に入り
                                 </Link>
                                 <Link href="/reservations" className="text-sm font-medium text-gray-700 hover:text-gray-900 transition">
                                     予約一覧
@@ -48,7 +48,7 @@ export default function Header() {
                         )}
                         {!isLoading && isAuthenticated && user?.role === 'FARMER' && (
                             <Link href="/farmer" className="text-sm font-medium text-green-600 hover:text-green-800 transition">
-                                🚜 農家ページ
+                                農家ページ
                             </Link>
                         )}
                     </div>

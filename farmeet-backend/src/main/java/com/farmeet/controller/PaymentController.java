@@ -54,17 +54,30 @@ public class PaymentController {
     }
 
     /**
-     * Stripe決済を開始
+     * Stripe決済を開始（ギフト券適用対応）
      */
     @PostMapping("/stripe/create-checkout-session")
-    public ResponseEntity<Map<String, String>> createStripeCheckoutSession(
-            @RequestBody Map<String, Long> request,
+    public ResponseEntity<Map<String, Object>> createStripeCheckoutSession(
+            @RequestBody Map<String, Object> request,
             @AuthenticationPrincipal User user) {
         try {
-            Long reservationId = request.get("reservationId");
+            Long reservationId = ((Number) request.get("reservationId")).longValue();
+            Long voucherId = request.get("voucherId") != null
+                    ? ((Number) request.get("voucherId")).longValue()
+                    : null;
+
             validateReservationOwner(reservationId, user);
 
-            String checkoutUrl = paymentService.initiateStripePayment(reservationId);
+            String checkoutUrl = paymentService.initiateStripePayment(reservationId, voucherId);
+
+            if (checkoutUrl == null) {
+                // ギフト券で全額支払い完了
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "paidWithVoucher", true,
+                        "message", "ギフト券で決済が完了しました"));
+            }
+
             return ResponseEntity.ok(Map.of("url", checkoutUrl));
         } catch (StripeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -74,17 +87,29 @@ public class PaymentController {
     }
 
     /**
-     * PayPay決済を開始
+     * PayPay決済を開始（ギフト券適用対応）
      */
     @PostMapping("/paypay/create-payment")
-    public ResponseEntity<Map<String, String>> createPayPayPayment(
-            @RequestBody Map<String, Long> request,
+    public ResponseEntity<Map<String, Object>> createPayPayPayment(
+            @RequestBody Map<String, Object> request,
             @AuthenticationPrincipal User user) {
         try {
-            Long reservationId = request.get("reservationId");
+            Long reservationId = ((Number) request.get("reservationId")).longValue();
+            Long voucherId = request.get("voucherId") != null
+                    ? ((Number) request.get("voucherId")).longValue()
+                    : null;
+
             validateReservationOwner(reservationId, user);
 
-            String paymentUrl = paymentService.initiatePayPayPayment(reservationId);
+            String paymentUrl = paymentService.initiatePayPayPayment(reservationId, voucherId);
+
+            if (paymentUrl == null) {
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "paidWithVoucher", true,
+                        "message", "ギフト券で決済が完了しました"));
+            }
+
             return ResponseEntity.ok(Map.of("url", paymentUrl));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -92,20 +117,33 @@ public class PaymentController {
     }
 
     /**
-     * 銀行振込を開始
+     * 銀行振込を開始（ギフト券適用対応）
      */
     @PostMapping("/bank-transfer/initiate")
-    public ResponseEntity<PaymentDto> initiateBankTransfer(
-            @RequestBody Map<String, Long> request,
+    public ResponseEntity<?> initiateBankTransfer(
+            @RequestBody Map<String, Object> request,
             @AuthenticationPrincipal User user) {
         try {
-            Long reservationId = request.get("reservationId");
+            Long reservationId = ((Number) request.get("reservationId")).longValue();
+            Long voucherId = request.get("voucherId") != null
+                    ? ((Number) request.get("voucherId")).longValue()
+                    : null;
+
             validateReservationOwner(reservationId, user);
 
-            Payment payment = paymentService.initiateBankTransfer(reservationId);
+            Payment payment = paymentService.initiateBankTransfer(reservationId, voucherId);
+
+            // ギフト券で全額支払い済みの場合
+            if (payment.getAmount().compareTo(java.math.BigDecimal.ZERO) == 0) {
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "paidWithVoucher", true,
+                        "message", "ギフト券で決済が完了しました"));
+            }
+
             return ResponseEntity.ok(PaymentDto.fromEntity(payment));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 

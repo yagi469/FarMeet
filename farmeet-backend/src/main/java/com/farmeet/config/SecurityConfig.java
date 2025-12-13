@@ -32,8 +32,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/", "/api/auth/**", "/h2-console/**", "/api/farms/**",
                                                                 "/api/events/**",
                                                                 "/api/upload/**", "/oauth2/**", "/login/oauth2/**",
-                                                                "/error", "/api/ai/**",
-                                                                "/api/reservations/join/**")
+                                                                "/error", "/api/ai/**")
                                                 .permitAll()
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 .anyRequest().authenticated())

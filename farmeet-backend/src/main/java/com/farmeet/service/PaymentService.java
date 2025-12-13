@@ -1,6 +1,7 @@
 package com.farmeet.service;
 
 import com.farmeet.entity.*;
+import com.farmeet.repository.GiftVoucherRepository;
 import com.farmeet.repository.PaymentRepository;
 import com.farmeet.repository.ReservationRepository;
 import com.stripe.exception.StripeException;
@@ -17,15 +18,18 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final ReservationRepository reservationRepository;
+    private final GiftVoucherRepository giftVoucherRepository;
     private final StripeService stripeService;
     private final PayPayService payPayService;
 
     public PaymentService(PaymentRepository paymentRepository,
             ReservationRepository reservationRepository,
+            GiftVoucherRepository giftVoucherRepository,
             StripeService stripeService,
             PayPayService payPayService) {
         this.paymentRepository = paymentRepository;
         this.reservationRepository = reservationRepository;
+        this.giftVoucherRepository = giftVoucherRepository;
         this.stripeService = stripeService;
         this.payPayService = payPayService;
     }
@@ -35,11 +39,43 @@ public class PaymentService {
      */
     @Transactional
     public Payment createPayment(Reservation reservation, PaymentMethod paymentMethod) {
+        return createPayment(reservation, paymentMethod, null);
+    }
+
+    /**
+     * 決済情報を作成（ギフト券適用あり）
+     */
+    @Transactional
+    public Payment createPayment(Reservation reservation, PaymentMethod paymentMethod, Long voucherId) {
+        BigDecimal totalPrice = reservation.getTotalPrice();
+        BigDecimal voucherAmount = BigDecimal.ZERO;
+        GiftVoucher usedVoucher = null;
+
+        // ギフト券を適用
+        if (voucherId != null) {
+            usedVoucher = giftVoucherRepository.findById(voucherId)
+                    .orElseThrow(() -> new RuntimeException("ギフト券が見つかりません"));
+
+            if (!usedVoucher.isUsable()) {
+                throw new RuntimeException("このギフト券は使用できません");
+            }
+
+            if (usedVoucher.getOwner() == null
+                    || !usedVoucher.getOwner().getId().equals(reservation.getUser().getId())) {
+                throw new RuntimeException("このギフト券は使用できません");
+            }
+
+            // 使用額を計算（残高と合計金額の小さい方）
+            voucherAmount = usedVoucher.getBalance().min(totalPrice);
+        }
+
         Payment payment = new Payment();
         payment.setReservation(reservation);
         payment.setPaymentMethod(paymentMethod);
         payment.setPaymentStatus(PaymentStatus.PENDING);
-        payment.setAmount(reservation.getTotalPrice());
+        payment.setAmount(totalPrice.subtract(voucherAmount)); // 実際の決済額
+        payment.setVoucherAmount(voucherAmount);
+        payment.setUsedVoucher(usedVoucher);
         payment.setRefundedAmount(BigDecimal.ZERO);
 
         if (paymentMethod == PaymentMethod.BANK_TRANSFER) {
@@ -64,14 +100,55 @@ public class PaymentService {
     }
 
     /**
+     * ギフト券の残高を消費（決済完了時に呼び出し）
+     */
+    @Transactional
+    public void consumeVoucher(Payment payment) {
+        if (payment.getUsedVoucher() != null && payment.getVoucherAmount().compareTo(BigDecimal.ZERO) > 0) {
+            GiftVoucher voucher = payment.getUsedVoucher();
+            voucher.setBalance(voucher.getBalance().subtract(payment.getVoucherAmount()));
+
+            if (voucher.getBalance().compareTo(BigDecimal.ZERO) == 0) {
+                voucher.setStatus(GiftVoucherStatus.USED);
+            }
+
+            giftVoucherRepository.save(voucher);
+        }
+    }
+
+    /**
      * Stripe Checkout URLを取得
      */
     @Transactional
     public String initiateStripePayment(Long reservationId) throws StripeException {
+        return initiateStripePayment(reservationId, null);
+    }
+
+    /**
+     * Stripe Checkout URLを取得（ギフト券適用あり）
+     */
+    @Transactional
+    public String initiateStripePayment(Long reservationId, Long voucherId) throws StripeException {
         Reservation reservation = getReservationById(reservationId);
 
         Payment payment = paymentRepository.findByReservationId(reservationId)
-                .orElseGet(() -> createPayment(reservation, PaymentMethod.STRIPE));
+                .orElseGet(() -> createPayment(reservation, PaymentMethod.STRIPE, voucherId));
+
+        // 決済額が0の場合（ギフト券で全額支払い）
+        if (payment.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+            // ギフト券の残高を消費
+            consumeVoucher(payment);
+
+            // 決済完了として処理
+            payment.setPaymentStatus(PaymentStatus.COMPLETED);
+            payment.setPaidAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+
+            reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
+            reservationRepository.save(reservation);
+
+            return null; // 決済不要
+        }
 
         return stripeService.createCheckoutSession(payment, reservation);
     }
@@ -81,10 +158,32 @@ public class PaymentService {
      */
     @Transactional
     public String initiatePayPayPayment(Long reservationId) {
+        return initiatePayPayPayment(reservationId, null);
+    }
+
+    /**
+     * PayPay決済URLを取得（ギフト券適用あり）
+     */
+    @Transactional
+    public String initiatePayPayPayment(Long reservationId, Long voucherId) {
         Reservation reservation = getReservationById(reservationId);
 
         Payment payment = paymentRepository.findByReservationId(reservationId)
-                .orElseGet(() -> createPayment(reservation, PaymentMethod.PAYPAY));
+                .orElseGet(() -> createPayment(reservation, PaymentMethod.PAYPAY, voucherId));
+
+        // 決済額が0の場合（ギフト券で全額支払い）
+        if (payment.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+            consumeVoucher(payment);
+
+            payment.setPaymentStatus(PaymentStatus.COMPLETED);
+            payment.setPaidAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+
+            reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
+            reservationRepository.save(reservation);
+
+            return null;
+        }
 
         return payPayService.createPaymentLink(payment, reservation);
     }
@@ -94,10 +193,32 @@ public class PaymentService {
      */
     @Transactional
     public Payment initiateBankTransfer(Long reservationId) {
+        return initiateBankTransfer(reservationId, null);
+    }
+
+    /**
+     * 銀行振込を開始（ギフト券適用あり）
+     */
+    @Transactional
+    public Payment initiateBankTransfer(Long reservationId, Long voucherId) {
         Reservation reservation = getReservationById(reservationId);
 
         Payment payment = paymentRepository.findByReservationId(reservationId)
-                .orElseGet(() -> createPayment(reservation, PaymentMethod.BANK_TRANSFER));
+                .orElseGet(() -> createPayment(reservation, PaymentMethod.BANK_TRANSFER, voucherId));
+
+        // 決済額が0の場合（ギフト券で全額支払い）
+        if (payment.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+            consumeVoucher(payment);
+
+            payment.setPaymentStatus(PaymentStatus.COMPLETED);
+            payment.setPaidAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+
+            reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
+            reservationRepository.save(reservation);
+
+            return payment;
+        }
 
         reservation.setStatus(Reservation.ReservationStatus.AWAITING_TRANSFER);
         reservationRepository.save(reservation);
@@ -116,6 +237,9 @@ public class PaymentService {
         if (payment.getPaymentMethod() != PaymentMethod.BANK_TRANSFER) {
             throw new RuntimeException("This payment is not a bank transfer");
         }
+
+        // ギフト券の残高を消費
+        consumeVoucher(payment);
 
         payment.setPaymentStatus(PaymentStatus.COMPLETED);
         payment.setPaidAt(LocalDateTime.now());
@@ -140,6 +264,9 @@ public class PaymentService {
         if (payment.getPaymentMethod() != PaymentMethod.PAYPAY) {
             throw new RuntimeException("This payment is not a PayPay payment");
         }
+
+        // ギフト券の残高を消費
+        consumeVoucher(payment);
 
         payment.setPaymentStatus(PaymentStatus.COMPLETED);
         payment.setPaidAt(LocalDateTime.now());
@@ -211,6 +338,7 @@ public class PaymentService {
      * - 4日前まで: 100%
      * - 1〜3日前: 50%
      * - 当日: 0%
+     * 注: ギフト券使用分は返金対象外（そのまま残高に戻す等の対応が必要な場合は別途実装）
      */
     public BigDecimal calculateRefundAmount(Reservation reservation, Payment payment) {
         LocalDateTime eventDate = reservation.getEvent().getEventDate();
@@ -261,6 +389,8 @@ public class PaymentService {
     public void handleStripeCheckoutComplete(String sessionId) throws StripeException {
         Payment payment = stripeService.handleCheckoutSessionCompleted(sessionId);
         if (payment.getPaymentStatus() == PaymentStatus.COMPLETED) {
+            // ギフト券の残高を消費
+            consumeVoucher(payment);
             confirmReservationPayment(payment.getReservation().getId());
         }
     }

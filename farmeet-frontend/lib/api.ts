@@ -754,11 +754,11 @@ class ApiClient {
         return response.json();
     }
 
-    async createStripeCheckoutSession(reservationId: number): Promise<{ url: string }> {
+    async createStripeCheckoutSession(reservationId: number, voucherId?: number): Promise<{ url?: string; success?: boolean; paidWithVoucher?: boolean; message?: string }> {
         const response = await fetch(`${API_BASE_URL}/payments/stripe/create-checkout-session`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ reservationId }),
+            body: JSON.stringify({ reservationId, voucherId }),
         });
         if (!response.ok) {
             const error = await response.json();
@@ -775,11 +775,11 @@ class ApiClient {
         return response.json();
     }
 
-    async createPayPayPayment(reservationId: number): Promise<{ url: string }> {
+    async createPayPayPayment(reservationId: number, voucherId?: number): Promise<{ url?: string; success?: boolean; paidWithVoucher?: boolean; message?: string }> {
         const response = await fetch(`${API_BASE_URL}/payments/paypay/create-payment`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ reservationId }),
+            body: JSON.stringify({ reservationId, voucherId }),
         });
         if (!response.ok) {
             const error = await response.json();
@@ -921,6 +921,108 @@ class ApiClient {
             const error = await response.json();
             throw new Error(error.error || '参加者の削除に失敗しました');
         }
+    }
+
+    // ============================================
+    // ギフト券API
+    // ============================================
+
+    async purchaseGiftVoucher(data: {
+        amount: number;
+        recipientName?: string;
+        recipientEmail?: string;
+        message?: string;
+        paymentMethod?: 'STRIPE' | 'PAYPAY';
+    }): Promise<{ success: boolean; voucherId: number; paymentUrl: string }> {
+        const response = await fetch(`${API_BASE_URL}/gift-vouchers/purchase`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'ギフト券の購入に失敗しました');
+        }
+        return response.json();
+    }
+
+    async activateGiftVoucher(voucherId: number): Promise<{
+        success: boolean;
+        code: string;
+        amount: number;
+        expiresAt: string;
+    }> {
+        const response = await fetch(`${API_BASE_URL}/gift-vouchers/activate/${voucherId}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'ギフト券の有効化に失敗しました');
+        }
+        return response.json();
+    }
+
+    async checkGiftVoucher(code: string): Promise<{
+        id: number;
+        code: string;
+        amount: number;
+        balance: number;
+        status: string;
+        expiresAt: string;
+        purchaserName?: string;
+        hasMessage?: boolean;
+        isUsable: boolean;
+    }> {
+        const response = await fetch(`${API_BASE_URL}/gift-vouchers/check/${code}`);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'ギフト券が見つかりません');
+        }
+        return response.json();
+    }
+
+    async redeemGiftVoucher(code: string): Promise<{ success: boolean; message: string; balance: number }> {
+        const response = await fetch(`${API_BASE_URL}/gift-vouchers/redeem/${code}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'ギフト券の登録に失敗しました');
+        }
+        return response.json();
+    }
+
+    async getMyVouchers(): Promise<{
+        id: number;
+        code: string;
+        amount: number;
+        balance: number;
+        status: string;
+        expiresAt: string;
+        createdAt: string;
+        isUsable: boolean;
+        purchaserName?: string;
+    }[]> {
+        const response = await fetch(`${API_BASE_URL}/gift-vouchers/my`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('ギフト券一覧の取得に失敗しました');
+        return response.json();
+    }
+
+    async getUsableVouchers(): Promise<{
+        id: number;
+        code: string;
+        amount: number;
+        balance: number;
+    }[]> {
+        const response = await fetch(`${API_BASE_URL}/gift-vouchers/usable`, {
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error('ギフト券一覧の取得に失敗しました');
+        return response.json();
     }
 }
 

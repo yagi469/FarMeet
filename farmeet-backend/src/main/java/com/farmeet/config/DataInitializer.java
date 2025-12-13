@@ -96,9 +96,6 @@ public class DataInitializer implements CommandLineRunner {
 
                 // 既存イベントでカテゴリがnullのものを更新（本番環境用マイグレーション）
                 updateExistingEventsWithCategory();
-
-                // 既存農園で座標がnullのものを更新（地図機能用マイグレーション）
-                updateExistingFarmsWithCoordinates();
         }
 
         private void updateExistingEventsWithCategory() {
@@ -134,58 +131,6 @@ public class DataInitializer implements CommandLineRunner {
                 }
                 // デフォルトは野菜
                 return "VEGETABLE";
-        }
-
-        /**
-         * 既存農園で座標がnullのものに座標を設定するマイグレーション
-         */
-        private void updateExistingFarmsWithCoordinates() {
-                List<Farm> farms = farmRepository.findAll();
-                int updated = 0;
-                for (Farm farm : farms) {
-                        if (farm.getLatitude() == null || farm.getLongitude() == null) {
-                                double[] coords = getCoordinatesForFarm(farm.getName());
-                                if (coords != null) {
-                                        farm.setLatitude(coords[0]);
-                                        farm.setLongitude(coords[1]);
-                                        farmRepository.save(farm);
-                                        updated++;
-                                }
-                        }
-                }
-                if (updated > 0) {
-                        System.out.println(updated + "件の農園に座標を設定しました。");
-                }
-        }
-
-        /**
-         * 農園名から座標を取得（既存データのマイグレーション用）
-         */
-        private double[] getCoordinatesForFarm(String name) {
-                switch (name) {
-                        case "緑の里オーガニック農園":
-                                return new double[] { 35.9917, 139.0855 };
-                        case "さくらんぼの丘ファーム":
-                                return new double[] { 38.3614, 140.3781 };
-                        case "ひまわり牧場":
-                                return new double[] { 43.3415, 142.3833 };
-                        case "棚田の風景農園":
-                                return new double[] { 37.1266, 138.7612 };
-                        case "ぶどうの丘ワイナリー":
-                                return new double[] { 35.7099, 138.7275 };
-                        case "富士茶園":
-                                return new double[] { 35.1625, 138.6767 };
-                        case "京野菜ファーム":
-                                return new double[] { 35.0175, 135.5807 };
-                        case "陽だまりのブルーベリー農園":
-                                return new double[] { 34.6555, 133.9185 };
-                        case "あまおう農園":
-                                return new double[] { 33.3209, 130.5083 };
-                        case "南国トロピカル農園":
-                                return new double[] { 26.5917, 127.9773 };
-                        default:
-                                return null;
-                }
         }
 
         private User createAdminIfNotExists() {

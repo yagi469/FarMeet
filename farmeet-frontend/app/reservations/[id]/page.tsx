@@ -14,26 +14,14 @@ interface PaymentInfo {
     transferDeadline?: string;
 }
 
-interface Participant {
-    id: number;
-    userId: number;
-    username: string;
-    category: 'ADULT' | 'CHILD' | 'INFANT';
-    joinedAt: string;
-}
-
 export default function ReservationDetailPage() {
     const params = useParams();
     const router = useRouter();
     const pathname = usePathname();
     const [reservation, setReservation] = useState<Reservation | null>(null);
     const [payment, setPayment] = useState<PaymentInfo | null>(null);
-    const [participants, setParticipants] = useState<Participant[]>([]);
-    const [inviteLink, setInviteLink] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [generatingLink, setGeneratingLink] = useState(false);
-    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         if (!authHelper.isAuthenticated()) {
@@ -49,11 +37,6 @@ export default function ReservationDetailPage() {
             setReservation(data);
             setError(null);
 
-            // 招待コードがある場合はリンクを設定
-            if (data.inviteCode) {
-                setInviteLink(`${window.location.origin}/join/${data.inviteCode}`);
-            }
-
             // 決済情報を取得
             try {
                 const paymentData = await api.getPaymentByReservation(Number(params.id));
@@ -61,56 +44,11 @@ export default function ReservationDetailPage() {
             } catch {
                 // 決済情報がない場合は無視
             }
-
-            // 参加者一覧を取得
-            try {
-                const participantsData = await api.getParticipants(Number(params.id));
-                setParticipants(participantsData);
-            } catch {
-                // 参加者がいない場合は無視
-            }
         } catch (err) {
             console.error('予約読み込みエラー:', err);
             setError('予約の読み込みに失敗しました');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleGenerateInviteLink = async () => {
-        if (!reservation) return;
-        try {
-            setGeneratingLink(true);
-            const { inviteCode } = await api.generateInviteCode(reservation.id);
-            const link = `${window.location.origin}/join/${inviteCode}`;
-            setInviteLink(link);
-        } catch (err: any) {
-            alert(err.message || '招待リンクの生成に失敗しました');
-        } finally {
-            setGeneratingLink(false);
-        }
-    };
-
-    const handleCopyLink = async () => {
-        if (!inviteLink) return;
-        try {
-            await navigator.clipboard.writeText(inviteLink);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch {
-            alert('コピーに失敗しました');
-        }
-    };
-
-    const handleRemoveParticipant = async (participantId: number, username: string) => {
-        if (!reservation) return;
-        if (!confirm(`${username}さんを参加者から削除しますか？`)) return;
-
-        try {
-            await api.removeParticipant(reservation.id, participantId);
-            setParticipants(participants.filter(p => p.id !== participantId));
-        } catch (err: any) {
-            alert(err.message || '削除に失敗しました');
         }
     };
 
@@ -209,7 +147,7 @@ export default function ReservationDetailPage() {
             </div>
 
             {/* メインカード */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                 {/* ステータスバナー */}
                 <div className="bg-gray-50 px-6 py-4 border-b flex items-center justify-between">
                     <span className="text-sm text-gray-500">予約番号: #{reservation.id}</span>
@@ -384,103 +322,6 @@ export default function ReservationDetailPage() {
                     )}
                 </div>
             </div>
-
-            {/* 招待リンクセクション - 2人以上の予約のみ */}
-            {reservation.status !== 'CANCELLED' && reservation.numberOfPeople >= 2 && (
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-                    <div className="p-6">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <span className="text-2xl">👥</span>
-                            グループ招待
-                        </h3>
-
-                        {inviteLink ? (
-                            <div className="space-y-3">
-                                <p className="text-sm text-gray-600">
-                                    リンクを共有して、友人や家族を招待しましょう
-                                </p>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={inviteLink}
-                                        readOnly
-                                        className="flex-1 px-4 py-2 border rounded-lg bg-gray-50 text-sm"
-                                    />
-                                    <button
-                                        onClick={handleCopyLink}
-                                        className={`px-4 py-2 rounded-lg font-medium transition ${copied
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-green-600 text-white hover:bg-green-700'
-                                            }`}
-                                    >
-                                        {copied ? '✓ コピー済み' : 'コピー'}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                <p className="text-sm text-gray-600">
-                                    招待リンクを作成して、友人や家族と予約を共有できます
-                                </p>
-                                <button
-                                    onClick={handleGenerateInviteLink}
-                                    disabled={generatingLink}
-                                    className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50"
-                                >
-                                    {generatingLink ? '生成中...' : '招待リンクを作成'}
-                                </button>
-                            </div>
-                        )}
-
-                        {/* 参加者一覧 */}
-                        {participants.length > 0 && (
-                            <div className="mt-6 pt-6 border-t">
-                                <h4 className="font-medium text-gray-900 mb-3">
-                                    参加者 ({participants.length}名)
-                                </h4>
-                                <div className="space-y-2">
-                                    {participants.map((p) => (
-                                        <div
-                                            key={p.id}
-                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                                                    <span className="text-purple-600 font-medium">
-                                                        {p.username.charAt(0)}
-                                                    </span>
-                                                </div>
-                                                <span className="font-medium">{p.username}</span>
-                                                <span className={`text-xs px-2 py-0.5 rounded-full ${p.category === 'ADULT' ? 'bg-blue-100 text-blue-700' :
-                                                        p.category === 'CHILD' ? 'bg-green-100 text-green-700' :
-                                                            'bg-pink-100 text-pink-700'
-                                                    }`}>
-                                                    {p.category === 'ADULT' ? '大人' : p.category === 'CHILD' ? '子供' : '幼児'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm text-gray-500">
-                                                    {new Date(p.joinedAt).toLocaleDateString('ja-JP')}
-                                                </span>
-                                                <button
-                                                    onClick={() => handleRemoveParticipant(p.id, p.username)}
-                                                    className="text-red-500 hover:text-red-700 p-1"
-                                                    title="削除"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
-
