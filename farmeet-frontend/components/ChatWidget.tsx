@@ -5,7 +5,7 @@ import { MessageCircle, X, Send, Loader2, MapPin } from 'lucide-react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+// remark-gfm removed for iOS 15 compatibility (lookbehind regex not supported in Safari 15)
 
 interface ChatMessage {
     role: 'user' | 'assistant';
@@ -232,7 +232,6 @@ export default function ChatWidget() {
                                 >
                                     <div className={`text-sm markdown-content ${message.role === 'user' ? 'text-white' : 'text-gray-800'}`}>
                                         <ReactMarkdown
-                                            remarkPlugins={[remarkGfm]}
                                             components={{
                                                 a: ({ node, ...props }) => (
                                                     <a

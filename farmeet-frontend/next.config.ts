@@ -9,7 +9,6 @@ const nextConfig: NextConfig = {
     'date-fns',
     'react-day-picker',
     'react-markdown',
-    'remark-gfm',
     'lucide-react',
   ],
   images: {
