@@ -46,6 +46,7 @@ public class Farm {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "farm_images", joinColumns = @JoinColumn(name = "farm_id"))
     @Column(name = "image_url")
+    @OrderColumn(name = "images_order")
     private List<String> images;
 
     @ElementCollection(fetch = FetchType.EAGER)
