@@ -9,7 +9,6 @@ import com.farmeet.entity.ReservationParticipant;
 import com.farmeet.entity.User;
 import com.farmeet.repository.ExperienceEventRepository;
 import com.farmeet.repository.PaymentRepository;
-import com.farmeet.repository.ReservationParticipantRepository;
 import com.farmeet.repository.ReservationRepository;
 import com.stripe.exception.StripeException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 @Service
 public class ReservationService {
@@ -39,9 +34,6 @@ public class ReservationService {
     @Autowired
     private PaymentService paymentService;
 
-    @Autowired
-    private ReservationParticipantRepository participantRepository;
-
     @Transactional(readOnly = true)
     public List<ReservationDto> getUserReservationsAsDto(Long userId) {
         // 自分が予約者の予約
@@ -54,8 +46,8 @@ public class ReservationService {
                 .toList();
 
         // マージして重複を除去
-        Set<Long> seenIds = new HashSet<>();
-        List<ReservationDto> allReservations = new ArrayList<>();
+        java.util.Set<Long> seenIds = new java.util.HashSet<>();
+        List<ReservationDto> allReservations = new java.util.ArrayList<>();
 
         for (Reservation r : ownReservations) {
             if (seenIds.add(r.getId())) {
@@ -89,12 +81,9 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
-        // ユーザー本人の予約、または農園オーナーの予約、または参加者のみ閲覧可能
-        boolean isOwner = reservation.getUser().getId().equals(user.getId());
-        boolean isFarmOwner = reservation.getEvent().getFarm().getOwner().getId().equals(user.getId());
-        boolean isParticipant = participantRepository.existsByReservationIdAndUserId(id, user.getId());
-
-        if (!isOwner && !isFarmOwner && !isParticipant) {
+        // ユーザー本人の予約、または農園オーナーの予約のみ閲覧可能
+        if (!reservation.getUser().getId().equals(user.getId()) &&
+                !reservation.getEvent().getFarm().getOwner().getId().equals(user.getId())) {
             throw new RuntimeException("Unauthorized");
         }
 
@@ -179,6 +168,9 @@ public class ReservationService {
 
     // ========== 招待リンク機能 ==========
 
+    @Autowired
+    private com.farmeet.repository.ReservationParticipantRepository participantRepository;
+
     /**
      * 招待コードを生成
      */
@@ -198,7 +190,7 @@ public class ReservationService {
         }
 
         // 8文字のランダムコードを生成
-        String inviteCode = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        String inviteCode = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         reservation.setInviteCode(inviteCode);
         reservationRepository.save(reservation);
 
@@ -217,7 +209,7 @@ public class ReservationService {
      * 招待コードを使って予約に参加
      */
     @Transactional
-    public ReservationParticipant joinReservation(String inviteCode, User user,
+    public com.farmeet.entity.ReservationParticipant joinReservation(String inviteCode, User user,
             ReservationParticipant.ParticipantCategory category) {
         Reservation reservation = getReservationByInviteCode(inviteCode);
 
@@ -271,7 +263,7 @@ public class ReservationService {
                 break;
         }
 
-        ReservationParticipant participant = new ReservationParticipant();
+        com.farmeet.entity.ReservationParticipant participant = new com.farmeet.entity.ReservationParticipant();
         participant.setReservation(reservation);
         participant.setUser(user);
         participant.setCategory(category);
@@ -323,7 +315,7 @@ public class ReservationService {
             throw new RuntimeException("Only reservation owner can remove participants");
         }
 
-        com.farmeet.entity.ReservationParticipant participant = participantRepository.findById(participantId)
+        ReservationParticipant participant = participantRepository.findById(participantId)
                 .orElseThrow(() -> new RuntimeException("Participant not found"));
 
         // 該当予約の参加者かどうか確認

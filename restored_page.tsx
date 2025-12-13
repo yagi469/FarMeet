@@ -452,8 +452,8 @@ export default function ReservationDetailPage() {
                                                 </div>
                                                 <span className="font-medium">{p.username}</span>
                                                 <span className={`text-xs px-2 py-0.5 rounded-full ${p.category === 'ADULT' ? 'bg-blue-100 text-blue-700' :
-                                                    p.category === 'CHILD' ? 'bg-green-100 text-green-700' :
-                                                        'bg-pink-100 text-pink-700'
+                                                        p.category === 'CHILD' ? 'bg-green-100 text-green-700' :
+                                                            'bg-pink-100 text-pink-700'
                                                     }`}>
                                                     {p.category === 'ADULT' ? '大人' : p.category === 'CHILD' ? '子供' : '幼児'}
                                                 </span>
@@ -483,3 +483,4 @@ export default function ReservationDetailPage() {
         </div>
     );
 }
+

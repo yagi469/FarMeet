@@ -357,6 +357,8 @@ class ApiClient {
         if (!response.ok) throw new Error('Failed to cancel reservation');
     }
 
+
+
     // 管理者
     async adminGetUsers() {
         const response = await fetch(`${API_BASE_URL}/admin/users`, {

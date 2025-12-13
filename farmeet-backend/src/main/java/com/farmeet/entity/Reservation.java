@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 予約を管理するエンティティ
+ */
 @Entity
 @Table(name = "reservations")
 @Data
@@ -49,12 +52,26 @@ public class Reservation {
     @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Payment payment;
 
+    @Column(name = "invite_code", unique = true)
+    private String inviteCode;
+
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<ReservationParticipant> participants = new java.util.ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (inviteCode == null) {
+            generateInviteCode();
+        }
+    }
+
+    public void generateInviteCode() {
+        // ランダムな8文字のコード生成
+        this.inviteCode = java.util.UUID.randomUUID().toString().substring(0, 8);
     }
 
     public enum ReservationStatus {

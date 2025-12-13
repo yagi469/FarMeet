@@ -46,7 +46,15 @@ export interface Reservation {
     numberOfInfants?: number; // 幼児人数（0-5歳、無料）
     status: 'PENDING' | 'PENDING_PAYMENT' | 'AWAITING_TRANSFER' | 'PAYMENT_FAILED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
     totalPrice: number;
+    inviteCode?: string;
     createdAt: string;
+}
+
+export interface Participant {
+    id: string;
+    name: string;
+    userId: string;
+    joinedAt: string;
 }
 
 export interface AuthResponse {
